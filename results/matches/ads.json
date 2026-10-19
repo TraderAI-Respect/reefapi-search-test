@@ -1,0 +1,35 @@
+[
+  {
+    "ad_id": "8340756009",
+    "model": "Antminer S19",
+    "quantity_min": 15,
+    "quantity": "15 штук.",
+    "city": "Челябинск",
+    "price": "Карточка: 13 000 ₽; единица цены не подтверждена",
+    "condition": "Новый",
+    "evidence": "Продам новые Antminer s19 в наличии 15 штук.",
+    "url": "https://www.avito.ru/chelyabinsk/oborudovanie_dlya_biznesa/antminer_s19_8340756009"
+  },
+  {
+    "ad_id": "8366785593",
+    "model": "Antminer S19 90T",
+    "quantity_min": 20,
+    "quantity": "20 шт.",
+    "city": "Новосибирск",
+    "price": "3 900 ₽/шт.",
+    "condition": "Б/у; заявлены рабочими",
+    "evidence": "В наличии: 20 шт.",
+    "url": "https://www.avito.ru/novosibirsk/oborudovanie_dlya_biznesa/antminer_s19pro_110th_8366785593"
+  },
+  {
+    "ad_id": "8525083693",
+    "model": "Antminer S19J PRO 104T",
+    "quantity_min": 21,
+    "quantity": "21-30 штук.",
+    "city": "Екатеринбург",
+    "price": "Карточка: 7 000 ₽; единица цены не подтверждена",
+    "condition": "Б/у; заявлены рабочими",
+    "evidence": "Количество 21-30 штук.",
+    "url": "https://www.avito.ru/ekaterinburg/oborudovanie_dlya_biznesa/antminer_s19j_pro_104_th_8525083693"
+  }
+]

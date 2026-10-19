@@ -97,7 +97,13 @@
     "Avalon A852",
     "Ebit E10 18",
     "Ebit E9 Miner+",
-    "Bitfury B8 50"
+    "Bitfury B8 50",
+    "Innosilicon A10",
+    "Innosilicon A11",
+    "Innosilicon A11 Pro",
+    "Antminer S19 Pro",
+    "Antminer S19j Pro",
+    "Antminer S19k Pro"
   ],
   "cursor": 26,
   "last_run": 1792436287.2754734,
@@ -231,6 +237,30 @@
       "next": 2,
       "done": true,
       "api_limit_reached": false
+    },
+    {
+      "next": 1,
+      "done": false
+    },
+    {
+      "next": 1,
+      "done": false
+    },
+    {
+      "next": 1,
+      "done": false
+    },
+    {
+      "next": 1,
+      "done": false
+    },
+    {
+      "next": 1,
+      "done": false
+    },
+    {
+      "next": 1,
+      "done": false
     },
     {
       "next": 1,
