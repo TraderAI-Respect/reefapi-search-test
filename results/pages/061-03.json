@@ -1,0 +1,23 @@
+{
+  "query": "Antminer S17 Pro",
+  "page": 3,
+  "pagination": {
+    "page": 3,
+    "has_more": false
+  },
+  "ads": [
+    {
+      "ad_id": "2963626591",
+      "title": "Кулер Delta 2.7А QFR1212GHE 120мм низкая вибрация",
+      "url": "https://www.avito.ru/moskva/tovary_dlya_kompyutera/kuler_delta_2.7a_qfr1212ghe_120mm_nizkaya_vibratsiya_2963626591",
+      "price": 1550,
+      "price_text": "1 550 ₽",
+      "price_per_unit": null,
+      "price_is_from": false,
+      "published_at": "2026-09-30T13:23:57Z",
+      "description_snippet": "Оригинал. Отбираю с помощью виброметра любые кулера с низкой вибрацией 15-39 микрон, Ref.\nОстерегайтесь подделок/реплик/копий, у которых сбоку корпуса отсутствует штамповка Delta с логотипом.\nУ нас Вы покупаете оригинальный тихий кулер среди кулеров ...",
+      "params_summary": null,
+      "city": "Москва"
+    }
+  ]
+}

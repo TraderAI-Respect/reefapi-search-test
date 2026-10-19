@@ -1,0 +1,75 @@
+{
+  "query": "Antminer S19 90",
+  "page": 3,
+  "pagination": {
+    "page": 3,
+    "has_more": true
+  },
+  "ads": [
+    {
+      "ad_id": "4471166364",
+      "title": "Ремонт Асик Майнеров и Блоков Питания,Замена термо",
+      "url": "https://www.avito.ru/krasnodar/predlozheniya_uslug/remont_asik_maynerov_i_blokov_pitaniyazamena_termo_4471166364",
+      "price": 900,
+      "price_text": "от 900 ₽",
+      "price_per_unit": null,
+      "price_is_from": true,
+      "published_at": "2026-09-30T15:08:30Z",
+      "description_snippet": "Ремонт любых Майнеров и блоков питания с Гарантией.\n\nРаботаем только c брендами: Вitmаin, Whаtsminеr.\n\nВнимание — Avalon Не Ремонтируем!\n\nБесплатные консультации по оптимизации майнинга после ремонта.\nСотрудничаем с хостингами и цодами — берём больши...",
+      "params_summary": null,
+      "city": "Краснодар"
+    },
+    {
+      "ad_id": "2089938087",
+      "title": "Ремонт обслуживание Asic устройств",
+      "url": "https://www.avito.ru/chelyabinsk/predlozheniya_uslug/remont_obsluzhivanie_asic_ustroystv_2089938087",
+      "price": 500,
+      "price_text": "от 500 ₽",
+      "price_per_unit": null,
+      "price_is_from": true,
+      "published_at": "2026-10-01T21:25:36Z",
+      "description_snippet": "Сервисный центр «Mining-Village» ремонтирует и продает Asic Bitmain и не только!\n\nМы работаем в будние дни с 11-00 до 19-00. Адрес на Авито указан актуальный.\n\nПо Вопросам лучше звоните отвечаем на сообщения крайне редко!\n\n— хэш-платы Asic whatsminer...",
+      "params_summary": null,
+      "city": "Челябинск"
+    },
+    {
+      "ad_id": "2648379264",
+      "title": "Ремонт асиков/ майнеров, оборудования для майнинга",
+      "url": "https://www.avito.ru/samara/predlozheniya_uslug/remont_asikov_maynerov_oborudovaniya_dlya_mayninga_2648379264",
+      "price": 1000,
+      "price_text": "от 1 000 ₽",
+      "price_per_unit": null,
+      "price_is_from": true,
+      "published_at": "2026-09-20T14:51:43Z",
+      "description_snippet": "Предлагаем Вам: услуги по ремонтным работам любой сложности! Оперативные сроки ремонта.\n\nГарантия на все виды работ — 90 дней.\n\nСкидки при объеме от 100 штук- 20%.\n\nСервисный центр находится в Самаре, но также принимаем заказы со всех регионов России...",
+      "params_summary": null,
+      "city": "Самара"
+    },
+    {
+      "ad_id": "7862328220",
+      "title": "Ремонт асиков antminer",
+      "url": "https://www.avito.ru/sterlitamak/predlozheniya_uslug/remont_asikov_antminer_7862328220",
+      "price": 500,
+      "price_text": "от 500 ₽",
+      "price_per_unit": null,
+      "price_is_from": true,
+      "published_at": "2026-10-12T19:58:41Z",
+      "description_snippet": "Рeмонт майнинг обopудовaния. Продажа, мониторинг, сопровождение.\nРемонт хэш плат моделей:\n21 серия.\n19 серия.\n\nДиагностика и мелкий ремонт от 500р.\nПрошивка майнера 1000р.\nЗамена чипов от 4000р.\nКомплексное техническое обслуживание майнера: разбор + ...",
+      "params_summary": null,
+      "city": "Стерлитамак"
+    },
+    {
+      "ad_id": "2005272860",
+      "title": "Настройка Asic и GPU ферм",
+      "url": "https://www.avito.ru/izhevsk/predlozheniya_uslug/nastroyka_asic_i_gpu_ferm_2005272860",
+      "price": 1000,
+      "price_text": "от 1 000 ₽",
+      "price_per_unit": null,
+      "price_is_from": true,
+      "published_at": "2026-10-14T19:47:33Z",
+      "description_snippet": "Ваш бизнес по майнингу «под ключ».\n\nПрофессиональная сборка и настройка для максимальной эффективности вашего сетевого оборудования.\n\nПочему это выгодно?\n- В период роста курсов это особенно важно!\n- Подберем самое выгодное оборудование под ваш бюдже...",
+      "params_summary": null,
+      "city": "Ижевск"
+    }
+  ]
+}

@@ -1,12 +1,12 @@
 # Подходящие объявления ASIC
 
-Обновлено: 20.10.2026 02:05 (Екатеринбург).
+Обновлено: 20.10.2026 02:14 (Екатеринбург).
 
 Innosilicon A10 / A10 Pro / A11 / A11 Pro: от 1 целого устройства. Antminer S19 всех модификаций, кроме XP и Hydro: от 15. Bitfury B8 / BT200: от 5. Остальные модели из списка: от 20 у одного продавца.
 
 Это автоматический отбор по сохранённым фрагментам описаний. Наличие, состояние и цена заявлены продавцами; подтверждения контактом нет. Для A10/A11 без количества указано «от 1; остаток не указан», а не подтверждённый остаток. Неоднозначные объявления находятся в [отдельной таблице проверки](../review/README.md).
 
-Сохранённых страниц: 126. Подходящих позиций: 15.
+Сохранённых страниц: 170. Подходящих позиций: 16.
 
 | Количество | Город | Модель | Цена | Состояние | Подтверждение | Ссылка |
 |---|---|---|---|---|---|---|
@@ -21,22 +21,27 @@ Innosilicon A10 / A10 Pro / A11 / A11 Pro: от 1 целого устройст�
 | 24 шт. | Москва | Antminer S19 PRO 110T | Карточка: 8 500 ₽; единица цены не подтверждена | Б/у; заявлены рабочими | в наличии 24 шт. | [Авито](https://www.avito.ru/moskva/oborudovanie_dlya_biznesa/antminer_s19_pro_110th_7980125546) |
 | 21-30 штук. | Екатеринбург | Antminer S19J PRO 104T | Карточка: 7 000 ₽; единица цены не подтверждена | Б/у; заявлены рабочими | количество 21-30 штук. | [Авито](https://www.avito.ru/ekaterinburg/oborudovanie_dlya_biznesa/antminer_s19j_pro_104_th_8525083693) |
 | 154 шт. | Москва | Antminer S19K PRO | Цена нужной модели не установлена | Новый | продаются новые asic-майнеры bitmain antminer s19k pro. состояние — новые, не использовались, запечатаны в заводские коробки. в наличии 154 шт. | [Авито](https://www.avito.ru/moskva/oborudovanie_dlya_biznesa/asic_antminer_s19k_pro_120th_novye_8283200592) |
+| 100штук. | Екатеринбург | Antminer S19K PRO 120T | Карточка: 22 000 ₽; единица цены не подтверждена | Б/у | более 100штук. | [Авито](https://www.avito.ru/ekaterinburg/oborudovanie_dlya_biznesa/antminer_s19k_pro_120t_8350645483) |
 | 100 шт. | Москва | Antminer S19K PRO 270T | Цена нужной модели не установлена | Б/у | в наличии &gt;100 шт. | [Авито](https://www.avito.ru/moskva/oborudovanie_dlya_biznesa/s19k_pro_120th_alyuminiy_8413428589) |
 | 25шт. | Обнинск | Avalon 841 | Цена нужной модели не установлена | Уточнить | продам avalon 841 с блоком питания. цена за 1 шт 2100, с блоком питания 3100 руб. всего 25шт. | [Авито](https://www.avito.ru/obninsk/tovary_dlya_kompyutera/avalon_3694066193) |
 | от 1; остаток не указан | Красноярск | Innosilicon A11 | Карточка: 35 000 ₽; единица цены не подтверждена | Уточнить | Продажа A10/A11; точный остаток не указан | [Авито](https://www.avito.ru/krasnoyarsk/nastolnye_kompyutery/innosilicon_a11_mx_8326113572) |
 | 3 асика | Москва | Innosilicon A11 | Карточка: 98 000 ₽; единица цены не подтверждена | Б/у | 3 асика innosilicon a11 в отличном состоянии! | [Авито](https://www.avito.ru/moskva/oborudovanie_dlya_biznesa/asik_innosilicon_a11_asik_7850805970) |
 
-Завершены активные запросы: 63/102. Отключены: 3. Достигли предела 30 страниц: 0.
+Завершены активные запросы: 68/102. Отключены: 3. Достигли предела 30 страниц: 0.
 
 **Запросы с ошибкой: отложены, не считаются завершёнными. Остальные продолжаются.**
 
 | Запрос | Страница | Ошибка |
 |---|---|---|
 | Antminer T9+ | 2 | INVALID\_PARAM: Recovered saved INVALID\_PARAM; original message was not recorded. |
+| Innosilicon T2T | 3 | INVALID\_PARAM: page 3 is past Avito's last page for this search |
 | Innosilicon A10 Pro | 2 | INVALID\_PARAM: page 2 is past Avito's last page for this search |
 | Avalon 921 | 2 | INVALID\_PARAM: page 2 is past Avito's last page for this search |
 | Avalon 841 | 2 | INVALID\_PARAM: page 2 is past Avito's last page for this search |
+| Antminer S19 95 | 3 | INVALID\_PARAM: page 3 is past Avito's last page for this search |
+| Antminer S19 104 | 3 | INVALID\_PARAM: page 3 is past Avito's last page for this search |
+| Antminer S19 110 | 3 | INVALID\_PARAM: page 3 is past Avito's last page for this search |
+| Innosilicon A10 | 2 | INVALID\_PARAM: page 2 is past Avito's last page for this search |
+| Innosilicon A11 | 2 | INVALID\_PARAM: page 2 is past Avito's last page for this search |
 
-Личный API-ключ: успешных запросов 92. Консервативный резерв расхода: 200/900 кредитов. Это счётчик workflow, не фактический баланс ReefAPI; ошибки тоже резервируются.
-
-Последняя ошибка поиска: {"status": 200, "code": "TARGET\_BLOCKED"}
+Личный API-ключ: успешных запросов 136. Консервативный резерв расхода: 300/900 кредитов. Это счётчик workflow, не фактический баланс ReefAPI; ошибки тоже резервируются.
