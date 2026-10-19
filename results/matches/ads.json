@@ -1,5 +1,27 @@
 [
   {
+    "ad_id": "4241259165",
+    "model": "Antminer L3+",
+    "quantity_min": 20,
+    "quantity": "20 штук",
+    "city": "Новосибирск",
+    "price": "Цена нужной модели не установлена",
+    "condition": "Уточнить",
+    "evidence": "l3+ в комплете с блоками 20 штук осталось полностью в рабочем хорошем состоянии все по 4000.",
+    "url": "https://www.avito.ru/novosibirsk/tovary_dlya_kompyutera/prodam_avalon1066_i_l3_4241259165"
+  },
+  {
+    "ad_id": "8429513990",
+    "model": "Antminer S19",
+    "quantity_min": 100,
+    "quantity": "100шт.",
+    "city": "Новосибирск",
+    "price": "Цена нужной модели не установлена",
+    "condition": "Б/у",
+    "evidence": "в наличии 100шт.",
+    "url": "https://www.avito.ru/novosibirsk/oborudovanie_dlya_biznesa/antminer_s19j_pro_104th_8429513990"
+  },
+  {
     "ad_id": "8340756009",
     "model": "Antminer S19",
     "quantity_min": 15,
@@ -7,7 +29,7 @@
     "city": "Челябинск",
     "price": "Карточка: 13 000 ₽; единица цены не подтверждена",
     "condition": "Новый",
-    "evidence": "Продам новые Antminer s19 в наличии 15 штук.",
+    "evidence": "продам новые antminer s19 в наличии 15 штук.",
     "url": "https://www.avito.ru/chelyabinsk/oborudovanie_dlya_biznesa/antminer_s19_8340756009"
   },
   {
@@ -18,7 +40,7 @@
     "city": "Новосибирск",
     "price": "3 900 ₽/шт.",
     "condition": "Б/у; заявлены рабочими",
-    "evidence": "В наличии: 20 шт.",
+    "evidence": "в наличии: 20 шт.",
     "url": "https://www.avito.ru/novosibirsk/oborudovanie_dlya_biznesa/antminer_s19pro_110th_8366785593"
   },
   {
@@ -29,7 +51,18 @@
     "city": "Екатеринбург",
     "price": "Карточка: 7 000 ₽; единица цены не подтверждена",
     "condition": "Б/у; заявлены рабочими",
-    "evidence": "Количество 21-30 штук.",
+    "evidence": "количество 21-30 штук.",
     "url": "https://www.avito.ru/ekaterinburg/oborudovanie_dlya_biznesa/antminer_s19j_pro_104_th_8525083693"
+  },
+  {
+    "ad_id": "3694066193",
+    "model": "Avalon 841",
+    "quantity_min": 25,
+    "quantity": "25шт.",
+    "city": "Обнинск",
+    "price": "Цена нужной модели не установлена",
+    "condition": "Уточнить",
+    "evidence": "продам avalon 841 с блоком питания. цена за 1 шт 2100, с блоком питания 3100 руб. всего 25шт.",
+    "url": "https://www.avito.ru/obninsk/tovary_dlya_kompyutera/avalon_3694066193"
   }
 ]
