@@ -2,9 +2,12 @@ name: ASIC full scan
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '23 * * * *'
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: asic-full-scan
@@ -16,23 +19,32 @@ jobs:
     timeout-minutes: 25
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout latest progress
+        uses: actions/checkout@v4
+        with:
+          ref: main
 
-      - name: Install browser
+      - name: Prepare scanner and check quota
+        id: gate
+        shell: bash
         run: |
-          python3 -m venv .venv
-          .venv/bin/pip install playwright==1.55.0
-          .venv/bin/python -m playwright install --with-deps chromium
-
-      - name: Search next pages
-        run: |
-          .venv/bin/python - <<'PY'
-          import json, os, re, time
+          cat > /tmp/asic_scan.py <<'PY'
+          import json
+          import os
+          import re
+          import sys
+          import time
           from pathlib import Path
           from urllib.parse import urlsplit
-          from playwright.sync_api import sync_playwright
+          from email.utils import parsedate_to_datetime
 
-          queries = [
+          LIMIT = 10
+          WINDOW = 3600
+          MAX_PAGE = 30
+          ROOT = Path("results")
+          CHECKPOINT = ROOT / "asic-progress.json"
+
+          QUERIES = [
               "Antminer S19", "Antminer T19", "Antminer S17",
               "Antminer T17", "Antminer T15", "Antminer S9",
               "Antminer T9+", "Antminer S7", "Antminer S5",
@@ -80,29 +92,128 @@ jobs:
               "Ebit E10 18", "Ebit E9 Miner+",
               "Bitfury B8 50",
           ]
-          root = Path("results")
-          root.mkdir(exist_ok=True)
-          checkpoint = root / "asic-progress.json"
-          state = json.loads(checkpoint.read_text()) if checkpoint.exists() else {
-              "queries": queries, "cursor": 0, "last_run": 0,
-              "pages": [{"next": 1, "done": False} for _ in queries],
-          }
-          if state["queries"] != queries:
-              raise SystemExit("Query list changed; preserve and review checkpoint.")
-          if time.time() - state["last_run"] < 3600:
-              raise SystemExit("Wait one hour after the previous full-scan run.")
+
+          def write_json(path, value):
+              path.parent.mkdir(parents=True, exist_ok=True)
+              temporary = path.with_suffix(path.suffix + ".tmp")
+              temporary.write_text(
+                  json.dumps(value, ensure_ascii=False, indent=2),
+                  encoding="utf-8",
+              )
+              temporary.replace(path)
+
+          if CHECKPOINT.exists():
+              state = json.loads(CHECKPOINT.read_text(encoding="utf-8"))
+          else:
+              pages_folder = ROOT / "pages"
+              if pages_folder.exists() and any(pages_folder.glob("*.json")):
+                  raise RuntimeError(
+                      "Results exist but checkpoint is missing. "
+                      "Refusing to restart from zero."
+                  )
+              state = {
+                  "queries": QUERIES,
+                  "cursor": 0,
+                  "last_run": 0,
+                  "pages": [
+                      {"next": 1, "done": False} for _ in QUERIES
+                  ],
+              }
+
+          if state.get("queries") != QUERIES:
+              raise RuntimeError(
+                  "Query list differs from saved progress. "
+                  "Checkpoint preserved; review required."
+              )
+          if len(state.get("pages", [])) != len(QUERIES):
+              raise RuntimeError("Invalid checkpoint page count.")
+
+          # Conservatively migrate the previous workflow's cooldown.
+          if "request_times" not in state:
+              previous = state.get("last_run", 0)
+              state["request_times"] = (
+                  [previous] * LIMIT if previous else []
+              )
 
           def save():
-              checkpoint.write_text(
-                  json.dumps(state, ensure_ascii=False, indent=2)
+              write_json(CHECKPOINT, state)
+
+          def recent_requests():
+              now = time.time()
+              state["request_times"] = [
+                  timestamp for timestamp in state["request_times"]
+                  if timestamp > now - WINDOW
+              ]
+              return len(state["request_times"])
+
+          def complete():
+              return all(entry.get("done") for entry in state["pages"])
+
+          def allowed():
+              return (
+                  not complete()
+                  and not state.get("paused", False)
+                  and time.time() >= state.get("not_before", 0)
+                  and recent_requests() < LIMIT
               )
+
+          def summary():
+              finished = sum(
+                  bool(entry.get("done")) for entry in state["pages"]
+              )
+              capped = sum(
+                  bool(entry.get("api_limit_reached"))
+                  for entry in state["pages"]
+              )
+              message = (
+                  f"Completed queries: {finished}/{len(QUERIES)}\n"
+                  f"Queries stopped at API page limit: {capped}\n"
+                  f"Requests in last rolling hour: "
+                  f"{recent_requests()}/{LIMIT}\n"
+                  f"All accessible pages processed: {complete()}\n"
+                  f"Paused: {bool(state.get('paused', False))}\n"
+              )
+              if state.get("last_error"):
+                  message += (
+                      "Last error: "
+                      + json.dumps(
+                          state["last_error"], ensure_ascii=False
+                      )
+                      + "\n"
+                  )
+              print(message)
+              with open(
+                  os.environ["GITHUB_STEP_SUMMARY"],
+                  "a",
+                  encoding="utf-8",
+              ) as output:
+                  output.write("```text\n" + message + "```\n\n")
+
+          if sys.argv[1] == "--check":
+              can_run = allowed()
+              save()
+              with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+                  output.write(
+                      f"run={str(can_run).lower()}\n"
+                  )
+              summary()
+              raise SystemExit(0)
+
+          if not allowed():
+              summary()
+              raise SystemExit(0)
+
+          from playwright.sync_api import sync_playwright
 
           def rewrite(value, query, number):
               if isinstance(value, dict):
                   if "query" in value:
                       value.update(
-                          query=query, location="all", page=number,
-                          sort="relevance", category_detection=False,
+                          query=query,
+                          location="all",
+                          page=number,
+                          sort="relevance",
+                          category_detection=False,
                           include_sponsored=True,
                           include_fallback_results=False,
                           include_pii=False,
@@ -111,152 +222,328 @@ jobs:
                       return True
                   changed = False
                   for child in value.values():
-                      changed = rewrite(child, query, number) or changed
+                      changed = (
+                          rewrite(child, query, number) or changed
+                      )
                   return changed
               if isinstance(value, list):
                   changed = False
                   for child in value:
-                      changed = rewrite(child, query, number) or changed
+                      changed = (
+                          rewrite(child, query, number) or changed
+                      )
                   return changed
               return False
 
-          failed = False
-          with sync_playwright() as p:
-              browser = p.chromium.launch()
+          def defer_after_rate_limit(response):
+              until = time.time() + WINDOW
+              value = response.headers.get("retry-after", "")
+              try:
+                  until = max(until, time.time() + float(value))
+              except ValueError:
+                  try:
+                      until = max(
+                          until,
+                          parsedate_to_datetime(value).timestamp(),
+                      )
+                  except Exception:
+                      pass
+              state["not_before"] = until
+              save()
+
+          with sync_playwright() as playwright:
+              browser = playwright.chromium.launch()
               context = browser.new_context()
 
-              for attempt in range(10):
-                  active = [i for i, v in enumerate(state["pages"])
-                            if not v["done"]]
-                  if not active:
+              for attempt in range(LIMIT):
+                  if not allowed():
                       break
+
+                  active = [
+                      index for index, entry
+                      in enumerate(state["pages"])
+                      if not entry.get("done")
+                  ]
                   index = next(
-                      (i for i in active if i >= state["cursor"]), active[0]
+                      (
+                          candidate for candidate in active
+                          if candidate >= state["cursor"]
+                      ),
+                      active[0],
                   )
-                  query = queries[index]
+                  query = QUERIES[index]
                   number = state["pages"][index]["next"]
+
+                  if not 1 <= number <= MAX_PAGE:
+                      raise RuntimeError(
+                          "Invalid page in checkpoint; review required."
+                      )
+
                   page = context.new_page()
                   changed = {"ok": False}
+                  attempt_failed = False
+
                   try:
                       page.goto(
-                          "https://reefapi.com/playground?action=search&engine=avito",
-                          wait_until="domcontentloaded", timeout=45000,
+                          "https://reefapi.com/playground"
+                          "?action=search&engine=avito",
+                          wait_until="domcontentloaded",
+                          timeout=45000,
                       )
                       button = page.get_by_role(
-                          "button", name=re.compile("Send request", re.I)
+                          "button",
+                          name=re.compile("Send request", re.I),
                       )
-                      button.wait_for(state="visible", timeout=30000)
+                      button.wait_for(
+                          state="visible", timeout=30000
+                      )
 
                       def intercept(route):
-                          if route.request.method != "POST":
+                          request = route.request
+                          if request.method != "POST":
                               route.continue_()
                               return
-                          body = route.request.post_data_json
-                          if not rewrite(body, query, number):
+
+                          try:
+                              body = request.post_data_json
+                              if not rewrite(body, query, number):
+                                  route.abort()
+                                  return
+
+                              if (
+                                  recent_requests() >= LIMIT
+                                  or time.time()
+                                  < state.get("not_before", 0)
+                              ):
+                                  route.abort()
+                                  return
+
+                              # Reserve quota BEFORE sending.
+                              # Failed requests also consume our budget.
+                              state["request_times"].append(
+                                  time.time()
+                              )
+                              save()
+                              changed["ok"] = True
+                              route.continue_(
+                                  post_data=json.dumps(body)
+                              )
+                          except Exception:
                               route.abort()
-                              return
-                          changed["ok"] = True
-                          route.continue_(post_data=json.dumps(body))
+                              raise
 
                       page.route("**/api/proxy", intercept)
-                      state["last_run"] = time.time()
-                      save()
+
                       with page.expect_response(
-                          lambda r: r.request.method == "POST"
-                          and urlsplit(r.url).path == "/api/proxy",
+                          lambda response: (
+                              response.request.method == "POST"
+                              and urlsplit(response.url).path
+                              == "/api/proxy"
+                          ),
                           timeout=90000,
                       ) as pending:
                           button.click(timeout=15000)
 
                       response = pending.value
-                      payload = response.json()
-                      if (response.status != 200 or not changed["ok"]
-                              or payload.get("ok") is False):
+
+                      if response.status == 429:
+                          defer_after_rate_limit(response)
                           raise RuntimeError(
-                              f"HTTP {response.status}: {payload.get('error')}"
+                              "HTTP 429: demo quota reached; "
+                              "waiting before retry."
                           )
+
+                      if response.status in (401, 403):
+                          state["paused"] = True
+                          raise RuntimeError(
+                              f"HTTP {response.status}: "
+                              "access denied; manual review required."
+                          )
+
+                      if response.status != 200:
+                          raise RuntimeError(
+                              f"HTTP {response.status}"
+                          )
+
+                      payload = response.json()
+                      if not isinstance(payload, dict):
+                          raise RuntimeError(
+                              "Unexpected response envelope."
+                          )
+                      if (
+                          not changed["ok"]
+                          or payload.get("ok") is False
+                      ):
+                          raise RuntimeError(
+                              "API error: "
+                              + str(payload.get("error"))[:1000]
+                          )
+
                       data = payload.get("data")
                       if not isinstance(data, dict):
-                          raise RuntimeError("Unexpected response data.")
+                          raise RuntimeError(
+                              "Unexpected response data."
+                          )
                       rows = data.get("listings")
                       if not isinstance(rows, list):
-                          raise RuntimeError("No listings array; checkpoint not advanced.")
+                          raise RuntimeError(
+                              "No listings array; page not advanced."
+                          )
 
-                      echoed = data.get("page")
-                      if isinstance(echoed, int) and echoed != number:
-                          raise RuntimeError("API returned a different page.")
+                      echoed_page = data.get("page")
+                      if (
+                          isinstance(echoed_page, int)
+                          and echoed_page != number
+                      ):
+                          raise RuntimeError(
+                              "API returned a different page."
+                          )
 
                       fields = [
-                          "ad_id", "title", "url", "price", "price_text",
-                          "price_per_unit", "price_is_from", "published_at",
+                          "ad_id", "title", "url",
+                          "price", "price_text", "price_per_unit",
+                          "price_is_from", "published_at",
                           "description_snippet", "params_summary",
                       ]
                       ads = []
                       for row in rows:
-                          item = {k: row.get(k) for k in fields}
-                          item["city"] = (row.get("location") or {}).get("name")
+                          if not isinstance(row, dict):
+                              raise RuntimeError(
+                                  "Unexpected listing format."
+                              )
+                          item = {
+                              field: row.get(field)
+                              for field in fields
+                          }
+                          item["city"] = (
+                              row.get("location") or {}
+                          ).get("name")
                           ads.append(item)
+
                       pagination = {
-                          k: data.get(k) for k in [
-                              "page", "has_more", "has_next", "total_pages",
-                              "total_results", "pagination"
-                          ] if k in data
+                          key: data.get(key)
+                          for key in [
+                              "page", "has_more", "has_next",
+                              "total_pages", "total_results",
+                              "pagination",
+                          ]
+                          if key in data
                       }
                       report = {
-                          "query": query, "page": number,
-                          "pagination": pagination, "ads": ads,
+                          "query": query,
+                          "page": number,
+                          "pagination": pagination,
+                          "ads": ads,
                       }
-                      folder = root / "pages"
-                      folder.mkdir(exist_ok=True)
-                      (folder / f"{index:03d}-{number:02d}.json").write_text(
-                          json.dumps(report, ensure_ascii=False, indent=2)
+                      write_json(
+                          ROOT / "pages"
+                          / f"{index:03d}-{number:02d}.json",
+                          report,
                       )
-                      print("RESULT " + json.dumps(report, ensure_ascii=False),
-                            flush=True)
 
                       nested = data.get("pagination")
-                      nested = nested if isinstance(nested, dict) else {}
-                      more = data.get("has_more", nested.get("has_more"))
-                      next_flag = data.get("has_next", nested.get("has_next"))
-                      total = data.get("total_pages", nested.get("total_pages"))
-                      exhausted = (
-                          more is False or next_flag is False
-                          or (isinstance(total, int) and number >= total)
+                      nested = (
+                          nested if isinstance(nested, dict)
+                          else {}
                       )
+                      more = data.get(
+                          "has_more", nested.get("has_more")
+                      )
+                      has_next = data.get(
+                          "has_next", nested.get("has_next")
+                      )
+                      total = data.get(
+                          "total_pages", nested.get("total_pages")
+                      )
+                      exhausted = (
+                          more is False
+                          or has_next is False
+                          or (
+                              isinstance(total, int)
+                              and number >= total
+                          )
+                      )
+
                       entry = state["pages"][index]
                       entry["next"] = number + 1
-                      entry["done"] = exhausted or number >= 30
-                      entry["api_limit_reached"] = number >= 30 and not exhausted
-                      state["cursor"] = (index + 1) % len(queries)
+                      entry["done"] = (
+                          exhausted or number >= MAX_PAGE
+                      )
+                      entry["api_limit_reached"] = (
+                          number >= MAX_PAGE and not exhausted
+                      )
+
+                      state["cursor"] = (
+                          index + 1
+                      ) % len(QUERIES)
+                      state["consecutive_errors"] = 0
                       state.pop("last_error", None)
-                  except Exception as exc:
+                      print(
+                          "RESULT "
+                          + json.dumps(
+                              report, ensure_ascii=False
+                          ),
+                          flush=True,
+                      )
+
+                  except Exception as error:
+                      attempt_failed = True
+                      state["consecutive_errors"] = (
+                          state.get("consecutive_errors", 0) + 1
+                      )
                       state["last_error"] = {
-                          "query": query, "page": number,
-                          "message": str(exc)[:1500],
+                          "query": query,
+                          "page": number,
+                          "message": str(error)[:1500],
                       }
-                      print("ERROR " + json.dumps(state["last_error"],
-                                                 ensure_ascii=False))
-                      failed = True
+                      # Rate limits are retried after their cooldown.
+                      if (
+                          state["consecutive_errors"] >= 3
+                          and time.time()
+                          >= state.get("not_before", 0)
+                      ):
+                          state["paused"] = True
+                      print(
+                          "ERROR "
+                          + json.dumps(
+                              state["last_error"],
+                              ensure_ascii=False,
+                          ),
+                          flush=True,
+                      )
                   finally:
                       state["last_run"] = time.time()
                       save()
                       page.close()
-                  if failed:
+
+                  if attempt_failed:
                       break
 
               browser.close()
 
-          done = sum(v["done"] for v in state["pages"])
-          message = f"Finished queries: {done}/{len(queries)}. Results saved in results/pages."
-          print(message)
-          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as f:
-              f.write(message)
-          if failed:
-              raise SystemExit("Stopped on error; successful pages preserved.")
+          summary()
           PY
+          python3 /tmp/asic_scan.py --check
+
+      - name: Install cloud browser
+        if: steps.gate.outputs.run == 'true'
+        shell: bash
+        run: |
+          python3 -m venv .venv
+          .venv/bin/pip install playwright==1.55.0
+          .venv/bin/python -m playwright install --with-deps chromium
+
+      - name: Search next pages
+        id: search
+        if: steps.gate.outputs.run == 'true'
+        shell: bash
+        run: |
+          .venv/bin/python /tmp/asic_scan.py --run
 
       - name: Save progress and results
+        id: save
         if: always()
+        shell: bash
         run: |
           if [ -f results/asic-progress.json ]; then
             git config user.name "github-actions[bot]"
@@ -267,3 +554,89 @@ jobs:
               git push origin HEAD:main
             fi
           fi
+
+      - name: Stop workflow when complete or unsafe to continue
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GATE_OUTCOME: ${{ steps.gate.outcome }}
+          SEARCH_OUTCOME: ${{ steps.search.outcome }}
+          SAVE_OUTCOME: ${{ steps.save.outcome }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import urllib.request
+          from pathlib import Path
+
+          reason = None
+
+          if os.environ["SAVE_OUTCOME"] == "failure":
+              reason = (
+                  "Paused: saving progress failed. "
+                  "Manual review required to avoid repeated requests."
+              )
+          elif os.environ["GATE_OUTCOME"] == "failure":
+              reason = (
+                  "Paused: scanner preparation or checkpoint validation failed."
+              )
+          elif os.environ["SEARCH_OUTCOME"] == "failure":
+              reason = (
+                  "Paused: scanner stopped unexpectedly. "
+                  "Review logs before re-enabling."
+              )
+          else:
+              path = Path("results/asic-progress.json")
+              if path.exists():
+                  state = json.loads(
+                      path.read_text(encoding="utf-8")
+                  )
+                  pages = state.get("pages", [])
+
+                  if state.get("paused"):
+                      reason = (
+                          "Paused: access denied or repeated search errors. "
+                          "See last_error in the checkpoint."
+                      )
+                  elif pages and all(
+                      page.get("done") for page in pages
+                  ):
+                      capped = sum(
+                          bool(page.get("api_limit_reached"))
+                          for page in pages
+                      )
+                      reason = (
+                          "Finished: all accessible pages processed. "
+                          f"Queries reaching the API page limit: {capped}."
+                      )
+
+          if reason:
+              repository = os.environ["GITHUB_REPOSITORY"]
+              url = (
+                  f"https://api.github.com/repos/{repository}/actions/"
+                  "workflows/asic-full-scan.yml/disable"
+              )
+              request = urllib.request.Request(
+                  url,
+                  method="PUT",
+                  headers={
+                      "Authorization":
+                          "Bearer " + os.environ["GH_TOKEN"],
+                      "Accept": "application/vnd.github+json",
+                      "User-Agent": "asic-full-scan",
+                  },
+              )
+              with urllib.request.urlopen(
+                  request, timeout=30
+              ) as response:
+                  print("Workflow disabled:", response.status)
+
+              print(reason)
+              with open(
+                  os.environ["GITHUB_STEP_SUMMARY"],
+                  "a",
+                  encoding="utf-8",
+              ) as output:
+                  output.write("\n" + reason + "\n")
+          PY
