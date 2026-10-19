@@ -11,17 +11,6 @@
     "url": "https://www.avito.ru/novosibirsk/tovary_dlya_kompyutera/prodam_avalon1066_i_l3_4241259165"
   },
   {
-    "ad_id": "7676580659",
-    "model": "Antminer S19",
-    "quantity_min": 120,
-    "quantity": "120 комплект",
-    "city": "Котельники",
-    "price": "Карточка: 990 ₽; единица цены не подтверждена",
-    "condition": "Уточнить",
-    "evidence": "фильтр 120 комплект 2b1 разработан для эффективной защиты и охлаждения майнеров и асиков, таких как antminer l7, l9, s19, s21, t21, s23, z15 и аналогичных моделей. в набор входит два надёжных фильтра, которые предотвращают попадание пыли и грязи внут...",
-    "url": "https://www.avito.ru/kotelniki/tovary_dlya_kompyutera/filtr_120_antminer_l7_l9_s19-s23_t21_7676580659"
-  },
-  {
     "ad_id": "8305430206",
     "model": "Antminer S19",
     "quantity_min": 40,
@@ -154,28 +143,6 @@
     "url": "https://www.avito.ru/obninsk/tovary_dlya_kompyutera/avalon_3694066193"
   },
   {
-    "ad_id": "8270821046",
-    "model": "Innosilicon A10",
-    "quantity_min": 1,
-    "quantity": "от 1; остаток не указан",
-    "city": "Иркутск",
-    "price": "Цена нужной модели не установлена",
-    "condition": "Уточнить",
-    "evidence": "Продажа A10/A11; точный остаток не указан",
-    "url": "https://www.avito.ru/irkutsk/tovary_dlya_kompyutera/shumoboks_dlya_asika_bu_8270821046"
-  },
-  {
-    "ad_id": "4655998630",
-    "model": "Innosilicon A10",
-    "quantity_min": 1,
-    "quantity": "от 1; остаток не указан",
-    "city": "Москва",
-    "price": "Цена нужной модели не установлена",
-    "condition": "Уточнить",
-    "evidence": "Продажа A10/A11; точный остаток не указан",
-    "url": "https://www.avito.ru/moskva/tovary_dlya_kompyutera/k4zaf325bm-hc14_pamyat_4655998630"
-  },
-  {
     "ad_id": "8326113572",
     "model": "Innosilicon A11",
     "quantity_min": 1,
@@ -195,17 +162,6 @@
     "price": "Карточка: 98 000 ₽; единица цены не подтверждена",
     "condition": "Б/у",
     "evidence": "3 асика innosilicon a11 в отличном состоянии!",
-    "url": "https://www.avito.ru/moskva/oborudovanie_dlya_biznesa/asik_innosilicon_a11_asik_7850805970"
-  },
-  {
-    "ad_id": "7850805970",
-    "model": "Innosilicon A11 Pro",
-    "quantity_min": 1,
-    "quantity": "от 1; остаток не указан",
-    "city": "Москва",
-    "price": "Цена нужной модели не установлена",
-    "condition": "Б/у",
-    "evidence": "Продажа A10/A11; точный остаток не указан",
     "url": "https://www.avito.ru/moskva/oborudovanie_dlya_biznesa/asik_innosilicon_a11_asik_7850805970"
   }
 ]
