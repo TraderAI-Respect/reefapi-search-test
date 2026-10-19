@@ -2,8 +2,10 @@ name: ASIC full scan
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '23 * * * *'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/asic-full-scan.yml'
 
 permissions:
   contents: write
@@ -16,9 +18,19 @@ concurrency:
 jobs:
   scan:
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 110
 
     steps:
+      - name: Start cloud cycle
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import os
+          import time
+          with open(os.environ["GITHUB_ENV"], "a") as output:
+              output.write("ASIC_RUN_STARTED_AT=" + str(time.time()) + "\n")
+          PY
+
       - name: Checkout latest progress
         id: checkout
         uses: actions/checkout@v4
@@ -625,6 +637,8 @@ jobs:
                       required = {'1126pros':{68},'1146pro':{63},'1066pro':{55}}.get(token)
                   elif token in ('e10','e9miner+','b8','bt200','h7pro','a1','f1'):
                       name = {'e10':'Ebit E10','e9miner+':'Ebit E9 Miner+','b8':'Bitfury B8','bt200':'Bitfury BT200','h7pro':'Hummer Miner H7 Pro','a1':'Aiden Miner A1','f1':'Cheetah Miner F1'}[token]
+                      if token in ('b8', 'bt200'):
+                          minimum = 5
                       required = {'e10':{18},'b8':{50}}.get(token)
                       brand = name.split()[0]
                       if not re.search(r'\b' + brand + r'\b', line, re.I):
@@ -758,7 +772,7 @@ jobs:
               folder.mkdir(parents=True, exist_ok=True)
               now = datetime.now(timezone(timedelta(hours=5))).strftime('%d.%m.%Y %H:%M')
               text = ['# Подходящие объявления ASIC', '', f'Обновлено: {now} (Екатеринбург).', '',
-                      'Innosilicon A10 / A10 Pro / A11 / A11 Pro: от 1 целого устройства. Antminer S19 всех модификаций, кроме XP и Hydro: от 15. Остальные модели из списка: от 20 у одного продавца.', '',
+                      'Innosilicon A10 / A10 Pro / A11 / A11 Pro: от 1 целого устройства. Antminer S19 всех модификаций, кроме XP и Hydro: от 15. Bitfury B8 / BT200: от 5. Остальные модели из списка: от 20 у одного продавца.', '',
                       'Это автоматический отбор по сохранённым фрагментам описаний. Наличие, состояние и цена заявлены продавцами; подтверждения контактом нет. '
                       'Для A10/A11 без количества указано «от 1; остаток не указан», а не подтверждённый остаток. '
                       'Неоднозначные объявления находятся в [отдельной таблице проверки](../review/README.md).', '',
@@ -911,4 +925,84 @@ jobs:
                   encoding="utf-8",
               ) as output:
                   output.write("\n" + reason + "\n")
+          PY
+
+      - name: Continue search automatically on GitHub
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          """Schedule one successor on GitHub, respecting the saved rolling quota."""
+          import base64
+          import json
+          import os
+          import time
+          import urllib.request
+          from datetime import datetime, timedelta, timezone
+          from pathlib import Path
+          
+          def next_run(state, started, now):
+              pages = state.get('pages', [])
+              if not pages or state.get('paused') or all(x.get('done') for x in pages):
+                  return None
+              due = max(started + 3600, float(state.get('not_before', 0)), now)
+              recent = sorted(t for t in state.get('request_times', []) if t > now - 3600)
+              if len(recent) >= 15:
+                  due = max(due, recent[len(recent)-15] + 3600)
+              return due + 5
+          
+          def main():
+              path = Path('results/asic-progress.json')
+              if not path.exists():
+                  raise RuntimeError('No saved checkpoint; automatic continuation refused.')
+              state = json.loads(path.read_text(encoding='utf-8'))
+              started = float(os.environ['ASIC_RUN_STARTED_AT'])
+              due = next_run(state, started, time.time())
+              if due is None:
+                  print('No successor: search complete or paused.')
+                  return
+              # Long Retry-After periods are split across jobs; the scanner still checks not_before.
+              wake = min(due, time.time() + 3600)
+              display = datetime.fromtimestamp(wake, timezone(timedelta(hours=5))).isoformat()
+              message = 'Automatic continuation: waiting on GitHub until ' + display
+              print(message, flush=True)
+              with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as stream:
+                  stream.write('\n## Automatic continuation\n\n' + message + '\n')
+              while time.time() < wake:
+                  time.sleep(min(30, wake-time.time()))
+              repo = os.environ['GITHUB_REPOSITORY']
+              workflow = 'asic-full-scan.yml'
+              api = os.environ['GITHUB_API_URL'] + '/repos/' + repo
+              headers = {'Authorization':'Bearer ' + os.environ['GH_TOKEN'],
+                         'Accept':'application/vnd.github+json', 'User-Agent':'asic-search-continuation',
+                         'X-GitHub-Api-Version':'2022-11-28'}
+              def get_json(url):
+                  with urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=30) as response:
+                      return json.load(response)
+              # Respect a user's Disable workflow action while this job was waiting.
+              info = get_json(api + '/actions/workflows/' + workflow)
+              if info.get('state') != 'active':
+                  print('No successor: workflow disabled by user.')
+                  return
+              latest_file = get_json(api + '/contents/results/asic-progress.json?ref=main')
+              latest_state = json.loads(base64.b64decode(latest_file['content']).decode('utf-8'))
+              if next_run(latest_state, started, time.time()) is None:
+                  print('No successor: latest saved search complete or paused.')
+                  return
+              request = urllib.request.Request(
+                  api + '/actions/workflows/' + workflow + '/dispatches',
+                  method='POST', data=json.dumps({'ref':'main'}).encode('utf-8'),
+                  headers={**headers, 'Content-Type':'application/json'})
+              # No blind retries after an uncertain POST outcome: avoid duplicate dispatches.
+              with urllib.request.urlopen(request, timeout=30) as response:
+                  if response.status != 204:
+                      raise RuntimeError('Unexpected dispatch status: ' + str(response.status))
+              print('Successor workflow dispatched on main.', flush=True)
+              with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as stream:
+                  stream.write('\nSuccessor workflow dispatched on main.\n')
+          
+          if __name__ == '__main__':
+              main()
           PY
