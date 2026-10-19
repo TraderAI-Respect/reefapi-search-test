@@ -1,0 +1,269 @@
+name: ASIC full scan
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: asic-full-scan
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install browser
+        run: |
+          python3 -m venv .venv
+          .venv/bin/pip install playwright==1.55.0
+          .venv/bin/python -m playwright install --with-deps chromium
+
+      - name: Search next pages
+        run: |
+          .venv/bin/python - <<'PY'
+          import json, os, re, time
+          from pathlib import Path
+          from urllib.parse import urlsplit
+          from playwright.sync_api import sync_playwright
+
+          queries = [
+              "Antminer S19", "Antminer T19", "Antminer S17",
+              "Antminer T17", "Antminer T15", "Antminer S9",
+              "Antminer T9+", "Antminer S7", "Antminer S5",
+              "Antminer L3",
+              "Antminer D3", "Antminer Z9 Mini",
+              "Whatsminer M31S", "Whatsminer M20S", "Whatsminer M21S",
+              "Innosilicon T3S", "Innosilicon T3H", "Innosilicon T3+",
+              "Innosilicon T2T", "Innosilicon T2 Turbo",
+              "Innosilicon T2TZ", "Innosilicon T2Ti",
+              "Innosilicon T2TTi", "Innosilicon T2TS",
+              "Innosilicon T2Tsr", "Innosilicon T2THF",
+              "Innosilicon T2THM", "Innosilicon A10 Pro",
+              "Avalon 1126", "Avalon 1146",
+              "Avalon 1066", "Avalon 1046",
+              "Avalon 921", "Avalon 920", "Avalon 841",
+              "Avalon 851", "Avalon 852",
+              "Ebit E10", "Ebit E9", "Bitfury B8",
+              "Bitfury BT200", "Hummer Miner H7 Pro",
+              "Aiden Miner A1", "Aladdin Miner", "Cheetah Miner F1",
+              "асики партия", "асики оптом", "асики на запчасти",
+              "майнеры неисправные", "майнинг ферма",
+              "асики 20 штук", "асики 50 штук",
+              "асики 100 штук", "майнеры партия",
+              "Antminer S19 90", "Antminer S19 95",
+              "Antminer S19 96", "Antminer S19 100",
+              "Antminer S19 104", "Antminer S19 110",
+              "Antminer S19 120",
+              "Antminer S17 Pro", "Antminer S17+", "Antminer S17e",
+              "Antminer S9k", "Antminer S7-F1",
+              "Antminer L3+", "Antminer L3++",
+              "Antminer D3 17", "Antminer D3 19.3",
+              "Whatsminer M31S 74", "Whatsminer M31S 76",
+              "Whatsminer M20S 65", "Whatsminer M20S 68",
+              "Whatsminer M21S 52", "Whatsminer M21S 54",
+              "Whatsminer M21S 56",
+              "Innosilicon T3S 39", "Innosilicon T3H 50",
+              "Innosilicon T3+ 50", "Innosilicon T3+ 57",
+              "Innosilicon T2T 32", "Innosilicon T2TZ 30",
+              "Innosilicon T2TTi 25", "Innosilicon T2Tsr 25",
+              "Innosilicon T2THF 27", "Innosilicon T2T 29",
+              "Innosilicon T2T TH+ 37",
+              "Avalon 1126 Pro S 68", "Avalon 1146 Pro 63",
+              "Avalon 1066 Pro 55", "Avalon A921",
+              "Avalon A920H", "Avalon A851", "Avalon A852",
+              "Ebit E10 18", "Ebit E9 Miner+",
+              "Bitfury B8 50",
+          ]
+          root = Path("results")
+          root.mkdir(exist_ok=True)
+          checkpoint = root / "asic-progress.json"
+          state = json.loads(checkpoint.read_text()) if checkpoint.exists() else {
+              "queries": queries, "cursor": 0, "last_run": 0,
+              "pages": [{"next": 1, "done": False} for _ in queries],
+          }
+          if state["queries"] != queries:
+              raise SystemExit("Query list changed; preserve and review checkpoint.")
+          if time.time() - state["last_run"] < 3600:
+              raise SystemExit("Wait one hour after the previous full-scan run.")
+
+          def save():
+              checkpoint.write_text(
+                  json.dumps(state, ensure_ascii=False, indent=2)
+              )
+
+          def rewrite(value, query, number):
+              if isinstance(value, dict):
+                  if "query" in value:
+                      value.update(
+                          query=query, location="all", page=number,
+                          sort="relevance", category_detection=False,
+                          include_sponsored=True,
+                          include_fallback_results=False,
+                          include_pii=False,
+                      )
+                      value.pop("category", None)
+                      return True
+                  changed = False
+                  for child in value.values():
+                      changed = rewrite(child, query, number) or changed
+                  return changed
+              if isinstance(value, list):
+                  changed = False
+                  for child in value:
+                      changed = rewrite(child, query, number) or changed
+                  return changed
+              return False
+
+          failed = False
+          with sync_playwright() as p:
+              browser = p.chromium.launch()
+              context = browser.new_context()
+
+              for attempt in range(10):
+                  active = [i for i, v in enumerate(state["pages"])
+                            if not v["done"]]
+                  if not active:
+                      break
+                  index = next(
+                      (i for i in active if i >= state["cursor"]), active[0]
+                  )
+                  query = queries[index]
+                  number = state["pages"][index]["next"]
+                  page = context.new_page()
+                  changed = {"ok": False}
+                  try:
+                      page.goto(
+                          "https://reefapi.com/playground?action=search&engine=avito",
+                          wait_until="domcontentloaded", timeout=45000,
+                      )
+                      button = page.get_by_role(
+                          "button", name=re.compile("Send request", re.I)
+                      )
+                      button.wait_for(state="visible", timeout=30000)
+
+                      def intercept(route):
+                          if route.request.method != "POST":
+                              route.continue_()
+                              return
+                          body = route.request.post_data_json
+                          if not rewrite(body, query, number):
+                              route.abort()
+                              return
+                          changed["ok"] = True
+                          route.continue_(post_data=json.dumps(body))
+
+                      page.route("**/api/proxy", intercept)
+                      state["last_run"] = time.time()
+                      save()
+                      with page.expect_response(
+                          lambda r: r.request.method == "POST"
+                          and urlsplit(r.url).path == "/api/proxy",
+                          timeout=90000,
+                      ) as pending:
+                          button.click(timeout=15000)
+
+                      response = pending.value
+                      payload = response.json()
+                      if (response.status != 200 or not changed["ok"]
+                              or payload.get("ok") is False):
+                          raise RuntimeError(
+                              f"HTTP {response.status}: {payload.get('error')}"
+                          )
+                      data = payload.get("data")
+                      if not isinstance(data, dict):
+                          raise RuntimeError("Unexpected response data.")
+                      rows = data.get("listings")
+                      if not isinstance(rows, list):
+                          raise RuntimeError("No listings array; checkpoint not advanced.")
+
+                      echoed = data.get("page")
+                      if isinstance(echoed, int) and echoed != number:
+                          raise RuntimeError("API returned a different page.")
+
+                      fields = [
+                          "ad_id", "title", "url", "price", "price_text",
+                          "price_per_unit", "price_is_from", "published_at",
+                          "description_snippet", "params_summary",
+                      ]
+                      ads = []
+                      for row in rows:
+                          item = {k: row.get(k) for k in fields}
+                          item["city"] = (row.get("location") or {}).get("name")
+                          ads.append(item)
+                      pagination = {
+                          k: data.get(k) for k in [
+                              "page", "has_more", "has_next", "total_pages",
+                              "total_results", "pagination"
+                          ] if k in data
+                      }
+                      report = {
+                          "query": query, "page": number,
+                          "pagination": pagination, "ads": ads,
+                      }
+                      folder = root / "pages"
+                      folder.mkdir(exist_ok=True)
+                      (folder / f"{index:03d}-{number:02d}.json").write_text(
+                          json.dumps(report, ensure_ascii=False, indent=2)
+                      )
+                      print("RESULT " + json.dumps(report, ensure_ascii=False),
+                            flush=True)
+
+                      nested = data.get("pagination")
+                      nested = nested if isinstance(nested, dict) else {}
+                      more = data.get("has_more", nested.get("has_more"))
+                      next_flag = data.get("has_next", nested.get("has_next"))
+                      total = data.get("total_pages", nested.get("total_pages"))
+                      exhausted = (
+                          more is False or next_flag is False
+                          or (isinstance(total, int) and number >= total)
+                      )
+                      entry = state["pages"][index]
+                      entry["next"] = number + 1
+                      entry["done"] = exhausted or number >= 30
+                      entry["api_limit_reached"] = number >= 30 and not exhausted
+                      state["cursor"] = (index + 1) % len(queries)
+                      state.pop("last_error", None)
+                  except Exception as exc:
+                      state["last_error"] = {
+                          "query": query, "page": number,
+                          "message": str(exc)[:1500],
+                      }
+                      print("ERROR " + json.dumps(state["last_error"],
+                                                 ensure_ascii=False))
+                      failed = True
+                  finally:
+                      state["last_run"] = time.time()
+                      save()
+                      page.close()
+                  if failed:
+                      break
+
+              browser.close()
+
+          done = sum(v["done"] for v in state["pages"])
+          message = f"Finished queries: {done}/{len(queries)}. Results saved in results/pages."
+          print(message)
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as f:
+              f.write(message)
+          if failed:
+              raise SystemExit("Stopped on error; successful pages preserved.")
+          PY
+
+      - name: Save progress and results
+        if: always()
+        run: |
+          if [ -f results/asic-progress.json ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add results/
+            if ! git diff --cached --quiet; then
+              git commit -m "Save ASIC search progress and results"
+              git push origin HEAD:main
+            fi
+          fi
