@@ -38,7 +38,7 @@ jobs:
           from urllib.parse import urlsplit
           from email.utils import parsedate_to_datetime
 
-          LIMIT = 10
+          LIMIT = 15
           WINDOW = 3600
           MAX_PAGE = 30
           ROOT = Path("results")
