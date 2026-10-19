@@ -1,0 +1,23 @@
+{
+  "query": "Antminer T17",
+  "page": 4,
+  "pagination": {
+    "page": 4,
+    "has_more": false
+  },
+  "ads": [
+    {
+      "ad_id": "2308985980",
+      "title": "Кулер для Asic Miner S9 L9",
+      "url": "https://www.avito.ru/cheboksary/tovary_dlya_kompyutera/kuler_dlya_asic_miner_s9_l9_2308985980",
+      "price": 1000,
+      "price_text": "1 000 ₽",
+      "price_per_unit": null,
+      "price_is_from": false,
+      "published_at": "2026-09-23T06:59:35Z",
+      "description_snippet": "Кулер вентилятор Майнинг.\n\nSenlifang Sg121238bs Qfr1212ghe.\n\nDC 12 В 2.1A S7 S9 T9 Btc L3 Eth двойной шарикоподшипник/охлаждающий вентилятор 120*120*38 мм.\n\nМодель: Sg121238bs.\n\nРазмер: 120*120*38 мм.\n\nРазъем: 4 Pin.\n\nОбъем воздуха: 210.38cfm.\n\nСкоро...",
+      "params_summary": null,
+      "city": "Чебоксары"
+    }
+  ]
+}

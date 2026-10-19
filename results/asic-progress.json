@@ -106,8 +106,8 @@
     "Antminer S19k Pro",
     "асики"
   ],
-  "cursor": 3,
-  "last_run": 1792444468.2612848,
+  "cursor": 31,
+  "last_run": 1792444616.57625,
   "pages": [
     {
       "next": 5,
@@ -128,8 +128,8 @@
       "disabled": false
     },
     {
-      "next": 4,
-      "done": false,
+      "next": 5,
+      "done": true,
       "api_limit_reached": false,
       "disabled": false
     },
@@ -140,7 +140,7 @@
       "disabled": false
     },
     {
-      "next": 4,
+      "next": 5,
       "done": false,
       "api_limit_reached": false,
       "disabled": false
@@ -188,19 +188,19 @@
       "disabled": false
     },
     {
-      "next": 4,
+      "next": 5,
       "done": false,
       "api_limit_reached": false,
       "disabled": false
     },
     {
-      "next": 4,
+      "next": 5,
       "done": false,
       "api_limit_reached": false,
       "disabled": false
     },
     {
-      "next": 4,
+      "next": 5,
       "done": false,
       "api_limit_reached": false,
       "disabled": false
@@ -308,7 +308,7 @@
       "disabled": false
     },
     {
-      "next": 4,
+      "next": 5,
       "done": false,
       "api_limit_reached": false,
       "disabled": false
@@ -817,10 +817,10 @@
     1792439413.614815,
     1792439417.39991
   ],
-  "consecutive_errors": 0,
-  "api_budget_reserved": 300,
-  "api_successful_requests": 136,
-  "api_charged_reported": 272,
+  "consecutive_errors": 1,
+  "api_budget_reserved": 314,
+  "api_successful_requests": 142,
+  "api_charged_reported": 284,
   "search_mode": "personal_api_key",
   "last_query_error": {
     "query_index": 59,
@@ -830,5 +830,9 @@
     "page": 3,
     "message": "page 3 is past Avito's last page for this search"
   },
-  "recovery": "Known INVALID_PARAM isolated; other queries resumed."
+  "recovery": "Known INVALID_PARAM isolated; other queries resumed.",
+  "last_error": {
+    "status": 0,
+    "code": "API_ERROR"
+  }
 }
