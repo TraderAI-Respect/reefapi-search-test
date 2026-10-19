@@ -106,12 +106,12 @@
     "Antminer S19k Pro",
     "асики"
   ],
-  "cursor": 1,
-  "last_run": 1792447120.676704,
+  "cursor": 0,
+  "last_run": 1792447241.4017763,
   "pages": [
     {
-      "next": 28,
-      "done": false,
+      "next": 31,
+      "done": true,
       "api_limit_reached": false,
       "disabled": false
     },
@@ -500,8 +500,8 @@
       }
     },
     {
-      "next": 27,
-      "done": false,
+      "next": 31,
+      "done": true,
       "api_limit_reached": false,
       "disabled": false
     },
@@ -908,8 +908,8 @@
       }
     },
     {
-      "next": 26,
-      "done": false,
+      "next": 31,
+      "done": true,
       "disabled": false,
       "api_limit_reached": false
     }
@@ -932,9 +932,9 @@
     1792439417.39991
   ],
   "consecutive_errors": 0,
-  "api_budget_reserved": 614,
-  "api_successful_requests": 273,
-  "api_charged_reported": 546,
+  "api_budget_reserved": 638,
+  "api_successful_requests": 285,
+  "api_charged_reported": 570,
   "search_mode": "personal_api_key",
   "last_query_error": {
     "query_index": 101,
