@@ -20,6 +20,7 @@ jobs:
 
     steps:
       - name: Checkout latest progress
+        id: checkout
         uses: actions/checkout@v4
         with:
           ref: main
@@ -91,6 +92,12 @@ jobs:
               "Avalon A920H", "Avalon A851", "Avalon A852",
               "Ebit E10 18", "Ebit E9 Miner+",
               "Bitfury B8 50",
+              "Innosilicon A10",
+              "Innosilicon A11",
+              "Innosilicon A11 Pro",
+              "Antminer S19 Pro",
+              "Antminer S19j Pro",
+              "Antminer S19k Pro",
           ]
 
           def write_json(path, value):
@@ -119,6 +126,19 @@ jobs:
                       {"next": 1, "done": False} for _ in QUERIES
                   ],
               }
+
+          saved_queries = state.get("queries", [])
+          if (
+              saved_queries != QUERIES
+              and saved_queries
+              and QUERIES[:len(saved_queries)] == saved_queries
+              and len(state.get("pages", [])) == len(saved_queries)
+          ):
+              state["pages"].extend(
+                  {"next": 1, "done": False}
+                  for _ in QUERIES[len(saved_queries):]
+              )
+              state["queries"] = QUERIES
 
           if state.get("queries") != QUERIES:
               raise RuntimeError(
@@ -540,6 +560,255 @@ jobs:
         run: |
           .venv/bin/python /tmp/asic_scan.py --run
 
+      - name: Build matching ASIC table
+        id: report
+        if: always() && steps.checkout.outcome == 'success'
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          """Conservative report from saved public search snippets; no network calls."""
+          import csv
+          import html
+          import json
+          import os
+          import re
+          from datetime import datetime, timedelta, timezone
+          from pathlib import Path
+          from urllib.parse import urlsplit
+          
+          TOKEN = re.compile(
+              r'\b(?:s19(?:\s*[jkie])?(?:\s*pro\+?)?(?:\s*xp\+?)?(?:\s*(?:hydro|hyd))?|s17(?:\s*pro|\+|e)?|s9[a-z]*|s7(?:-f1)?|s5|'
+              r't19|t17[a-z+]*|t15|t9\+|l3\+{0,2}|d3|z9\s*mini|m\d+[a-z+]*|'
+              r'a1[01](?:\s*pro)?|t3s|t3h|t3\+(?:\s*pro)?|t2\s*turbo|'
+              r't2tt?i|t2tsr|t2thf|t2thm|t2tz|t2ts|t2t(?:\s*th\+)?|'
+              r'1126(?:\s*pro\s*s)?|1146(?:\s*pro)?|1066(?:\s*pro)?|1046|'
+              r'a?921|a?920h?|841|a?851|a?852|e10|e9(?:\s*miner\+)?|'
+              r'b8|bt200|h7\s*pro|a1|f1)(?![a-z0-9+])', re.I)
+          BRANDED = re.compile(r'\b(?:antminer|whatsminer|microbt|innosilicon|avalon|canaan|ebit|bitfury|hummer|aiden|aladdin|cheetah)\b', re.I)
+          PARTS = re.compile(r'х[еэ]ш.?плат|контрольн|\bкпу\b|\bбп\b|блок[аи]?\s+питани|корпус|вентил|кулер|шлейф|кабел|коса|чип|водоблок|жидкост|ванна|стойк|стеллаж|трафарет|тестер|контейнер|фланец|термопаст|разъ[её]м|коннектор|планка|шумбокс', re.I)
+          BUYER = re.compile(r'выкуп|скупк|куплю|покупаем|выкупаем|при[её]м|утилизац|ремонт|хостинг|размещен|настройка|прошивка', re.I)
+          UNITS = r'(?:шт(?:ук(?:и|а)?)?\.?|устройств\w*|аппарат\w*|асик\w*|майнер\w*|комплект\w*)'
+          QTY = re.compile(r'(?<![\d.,])(?P<lo>\d{1,5})(?:\s*[–—-]\s*(?P<hi>\d{1,5}))?\s*' + UNITS, re.I)
+          RATE = re.compile(r'(\d+(?:[.,]\d+)?)(?:\s*[/–-]\s*(\d+(?:[.,]\d+)?))?\s*(?:th|t[hx]?|тх|т|gh|g|г)(?:\b|/)', re.I)
+          PRICE = re.compile(r'(\d[\d\s.,]*\s*(?:₽|руб\.?|р\.))\s*(?:/\s*(?:шт\.?|комплект)|за\s+(?:1\s*)?(?:шт\w*|комплект))', re.I)
+          
+          def identify(line):
+              matches = list(TOKEN.finditer(line))
+              if not matches:
+                  if re.search(r'\baladdin\s*miner\b', line, re.I):
+                      return [{'model': 'Aladdin Miner', 'minimum': 20, 'valid': True}]
+                  return []
+              found = []
+              for match in matches:
+                  token = re.sub(r'\s+', '', match.group().lower())
+                  valid, minimum, required, name = True, 20, None, None
+                  if token in ('a10', 'a10pro', 'a11', 'a11pro'):
+                      minimum, name = 1, 'Innosilicon ' + token.upper().replace('PRO', ' Pro')
+                  elif token.startswith('s19'):
+                      name, minimum = 'Antminer ' + match.group().upper(), 15
+                      valid = not ('xp' in token or 'hyd' in token)
+                      rate = RATE.search(line[match.end():match.end()+35])
+                      if rate:
+                          name += ' ' + '/'.join(x for x in rate.groups() if x) + 'T'
+                  elif token in ('s17','s17pro','s17+','s17e','s9','s9k','s7','s7-f1','s5','t19','t17','t15','t9+','l3+','l3++','z9mini'):
+                      name = 'Antminer ' + token.upper().replace('PRO', ' Pro').replace('Z9MINI', 'Z9 Mini')
+                  elif token == 'd3':
+                      name, required = 'Antminer D3', {17,19.3}
+                  elif token in ('m31s','m20s','m21s'):
+                      name = 'Whatsminer ' + token.upper()
+                      required = {'m31s':{74,76},'m20s':{65,68},'m21s':{52,54,56}}[token]
+                  elif token in ('t3s','t3h','t3+','t2t','t2turbo','t2tz','t2ti','t2tti','t2ts','t2tsr','t2thf','t2thm','t2tth+'):
+                      name = 'Innosilicon ' + token.upper().replace('T2TURBO','T2 Turbo').replace('T2TTH+','T2T TH+')
+                      required = {'t3s':{39},'t3h':{50},'t3+':set(range(50,58)), 't2t':{29,32},'t2tz':{30},'t2tti':{25},'t2tsr':{25},'t2thf':{27},'t2tth+':{37}}.get(token)
+                  elif token in ('1126pros','1146pro','1066pro','1046','921','a921','920h','a920h','841','851','a851','852','a852'):
+                      name = 'Avalon ' + token.upper().replace('PROS',' Pro S').replace('PRO',' Pro')
+                      required = {'1126pros':{68},'1146pro':{63},'1066pro':{55}}.get(token)
+                  elif token in ('e10','e9miner+','b8','bt200','h7pro','a1','f1'):
+                      name = {'e10':'Ebit E10','e9miner+':'Ebit E9 Miner+','b8':'Bitfury B8','bt200':'Bitfury BT200','h7pro':'Hummer Miner H7 Pro','a1':'Aiden Miner A1','f1':'Cheetah Miner F1'}[token]
+                      required = {'e10':{18},'b8':{50}}.get(token)
+                      brand = name.split()[0]
+                      if not re.search(r'\b' + brand + r'\b', line, re.I):
+                          valid = False
+                  else:
+                      valid, name = False, token.upper()
+                  if required:
+                      rate = RATE.search(line[match.end():match.end()+35])
+                      if rate:
+                          values = [float(x.replace(',','.')) for x in rate.groups() if x]
+                          valid = valid and all(v in required for v in values)
+                          name += ' ' + '/'.join(f'{v:g}' for v in values) + ('G' if token == 'd3' else 'T')
+                      else:
+                          valid = False
+                  found.append({'model':name,'minimum':minimum,'valid':valid})
+              return found
+          
+          def listing_url(ad):
+              url = str(ad.get('url') or '')
+              part = urlsplit(url)
+              aid = str(ad.get('ad_id') or '')
+              if (part.scheme == 'https' and (part.hostname == 'avito.ru' or (part.hostname or '').endswith('.avito.ru'))
+                      and aid.isdigit() and re.search(r'_' + re.escape(aid) + r'$', part.path)):
+                  return part._replace(query='', fragment='').geturl()
+              return None
+          
+          def classify(ad):
+              title, desc = str(ad.get('title') or ''), str(ad.get('description_snippet') or '')
+              url = listing_url(ad)
+              if not url or BUYER.search(title) or PARTS.search(title):
+                  return [], []
+              if re.search(r'выкупаем|выкуплю|скупаем|куплю|утилизац|принимаем ваши', desc, re.I):
+                  return [], []
+              title_models = identify(title)
+              current = title_models[0] if len(title_models) == 1 else None
+              groups = []
+              segment = []
+              for line in desc.splitlines():
+                  if not line.strip():
+                      continue
+                  models = identify(line)
+                  if models or BRANDED.search(line):
+                      # A generic introduction like "Продаю Antminer" does not replace a model.
+                      generic = not models and not re.search(r'\b[a-z]\d', line, re.I)
+                      if not generic:
+                          if current and segment:
+                              groups.append((current, '\n'.join(segment)))
+                          current = models[0] if len(models) == 1 else None
+                          segment = []
+                  segment.append(line)
+              if current:
+                  groups.append((current, '\n'.join(segment)))
+              if not desc and len(title_models) == 1:
+                  groups.append((title_models[0], title))
+              rows = []
+              for model, segment in groups:
+                  if not model['valid']:
+                      continue
+                  quantity = None
+                  for line in segment.splitlines():
+                      if PARTS.search(line) or re.search(r'мин(?:имальн\w*)?\s+заказ|заказ\s+от|вмещ|помещ|мест\b|от\s*\d+\s*' + UNITS, line, re.I):
+                          continue
+                      if re.search(r'продан|продал|продано', line, re.I):
+                          tail = re.search(r'остал\w*\s*[:—-]?\s*(.*)', line, re.I)
+                          line = tail.group(1) if tail else ''
+                      for q in QTY.finditer(line):
+                          if re.search(r'плат|чип|кулер|вентил|шлейф', line[q.end():q.end()+18], re.I):
+                              continue
+                          lo = int(q['lo'])
+                          if q['hi'] and int(q['hi']) < lo:
+                              continue
+                          quantity = (lo, q.group(), line.strip())
+                  if quantity is None and model['minimum'] == 1:
+                      # Single-device eligibility, not an invented stock count.
+                      quantity = (1, 'от 1; остаток не указан', 'Продажа A10/A11; точный остаток не указан')
+                  if not quantity or quantity[0] < model['minimum']:
+                      continue
+                  price = PRICE.search(segment)
+                  if price:
+                      price_text = price.group().strip()
+                  elif len(title_models) == 1 and title_models[0]['model'] == model['model']:
+                      price_text = 'Карточка: ' + str(ad.get('price_text') or 'не указана') + '; единица цены не подтверждена'
+                  else:
+                      price_text = 'Цена нужной модели не установлена'
+                  condition = str(ad.get('params_summary') or '')
+                  if re.search(r'неисправ|нерабоч|не рабоч|на запчасти|под ремонт', segment, re.I):
+                      condition = 'Неисправные / на запчасти; по описанию'
+                  elif re.search(r'все.*рабочи|всё.*рабоч|аппараты рабочие|полностью рабоч|рабочем состоянии', desc, re.I):
+                      condition = (condition + '; ' if condition else '') + 'заявлены рабочими'
+                  rows.append({'ad_id':str(ad['ad_id']), 'model':model['model'],
+                               'quantity_min':quantity[0], 'quantity':quantity[1],
+                               'city':str(ad.get('city') or 'не указан'), 'price':price_text,
+                               'condition':condition or 'Уточнить', 'evidence':quantity[2], 'url':url})
+              if rows:
+                  return rows, []
+              if title_models or any(identify(line) for line in desc.splitlines()):
+                  return [], [{'ad_id':str(ad['ad_id']), 'title':title, 'city':str(ad.get('city') or ''),
+                               'url':url, 'reason':'Нет однозначного совпадения модели, хешрейта и количества по сохранённому описанию'}]
+              return [], []
+          
+          def collect(reports):
+              ads = {}
+              for report in reports:
+                  for ad in report.get('ads', []):
+                      aid = str(ad.get('ad_id') or '')
+                      if aid.isdigit():
+                          # Keep different snippets from duplicate queries; assess each separately.
+                          ads.setdefault(aid, []).append(ad)
+              rows, pending = {}, {}
+              for aid, versions in ads.items():
+                  for ad in versions:
+                      matches, review = classify(ad)
+                      for row in matches:
+                          rows.setdefault((aid, row['model']), row)
+                      for row in review:
+                          pending.setdefault(aid, row)
+                  if any(key[0] == aid for key in rows):
+                      pending.pop(aid, None)
+              return sorted(rows.values(), key=lambda x:(x['model'], x['city'], x['ad_id'])), list(pending.values())
+          
+          def cell(value):
+              value = html.escape(str(value), quote=False).replace('\n',' ').replace('\r',' ')
+              return value.replace('\\','\\\\').replace('|','\\|').replace('[','\\[').replace(']','\\]').replace('*','\\*').replace('`','\\`').replace('_','\\_')
+          
+          def main():
+              root = Path('results')
+              files = sorted((root/'pages').glob('*.json'))
+              reports = [json.loads(p.read_text(encoding='utf-8')) for p in files]
+              rows, pending = collect(reports)
+              folder = root/'matches'
+              folder.mkdir(parents=True, exist_ok=True)
+              now = datetime.now(timezone(timedelta(hours=5))).strftime('%d.%m.%Y %H:%M')
+              text = ['# Подходящие объявления ASIC', '', f'Обновлено: {now} (Екатеринбург).', '',
+                      'Innosilicon A10 / A10 Pro / A11 / A11 Pro: от 1 целого устройства. Antminer S19 всех модификаций, кроме XP и Hydro: от 15. Остальные модели из списка: от 20 у одного продавца.', '',
+                      'Это автоматический отбор по сохранённым фрагментам описаний. Наличие, состояние и цена заявлены продавцами; подтверждения контактом нет. '
+                      'Для A10/A11 без количества указано «от 1; остаток не указан», а не подтверждённый остаток. '
+                      'Неоднозначные объявления находятся в [отдельной таблице проверки](../review/README.md).', '',
+                      f'Сохранённых страниц: {len(files)}. Подходящих позиций: {len(rows)}.', '',
+                      '| Количество | Город | Модель | Цена | Состояние | Подтверждение | Ссылка |',
+                      '|---|---|---|---|---|---|---|']
+              for row in rows:
+                  text.append('| ' + ' | '.join(cell(row[k]) for k in ['quantity','city','model','price','condition','evidence']) + f" | [Авито]({row['url']}) |")
+              if not rows:
+                  text += ['', 'Пока нет однозначно подходящих объявлений. Это не означает, что поиск закончен.']
+              state_path = root/'asic-progress.json'
+              if state_path.exists():
+                  state = json.loads(state_path.read_text(encoding='utf-8'))
+                  entries = state.get('pages', [])
+                  finished = sum(bool(x.get('done')) for x in entries)
+                  caps = sum(bool(x.get('api_limit_reached')) for x in entries)
+                  text += ['', f'Завершены запросы: {finished}/{len(entries)}. Достигли предела 30 страниц: {caps}.']
+                  if state.get('last_error'):
+                      text += ['', 'Последняя ошибка поиска: ' + cell(json.dumps(state['last_error'], ensure_ascii=False))]
+                  if state.get('paused'):
+                      text += ['', '**Поиск приостановлен из-за ошибки; требуется проверка журнала.**']
+              (folder/'README.md').write_text('\n'.join(text)+'\n', encoding='utf-8')
+              (folder/'ads.json').write_text(json.dumps(rows, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
+              with (folder/'ads.csv').open('w', encoding='utf-8-sig', newline='') as stream:
+                  fields = ['quantity','city','model','price','condition','evidence','url','ad_id']
+                  writer = csv.writer(stream)
+                  writer.writerow(fields)
+                  for row in rows:
+                      values = [str(row[k]) for k in fields]
+                      writer.writerow(["'"+v if v.startswith(('=','+','-','@')) else v for v in values])
+              review = root/'review'
+              review.mkdir(parents=True, exist_ok=True)
+              review_text = ['# Объявления на дополнительную проверку', '', 'Эти объявления НЕ признаны подходящими. Сверьте полное описание и наличие с продавцом.', '',
+                             '| Город | Объявление | Причина | Ссылка |', '|---|---|---|---|']
+              for row in pending:
+                  review_text.append('| ' + ' | '.join(cell(row[k]) for k in ['city','title','reason']) + f" | [Авито]({row['url']}) |")
+              (review/'README.md').write_text('\n'.join(review_text)+'\n', encoding='utf-8')
+              summary = os.environ.get('GITHUB_STEP_SUMMARY')
+              if summary:
+                  repo = os.environ['GITHUB_REPOSITORY']
+                  with open(summary, 'a', encoding='utf-8') as stream:
+                      stream.write(f'\n## Подходящие объявления\n\nНайдено позиций: {len(rows)}. '
+                                   f'[Открыть таблицу](https://github.com/{repo}/tree/main/results/matches)\n\n')
+                      stream.write('\n'.join(text[text.index('| Количество | Город | Модель | Цена | Состояние | Подтверждение | Ссылка |'):])+'\n')
+              print(f'Report: {len(rows)} matching model positions; {len(pending)} need review.')
+          
+          if __name__ == '__main__':
+              main()
+          PY
+
       - name: Save progress and results
         id: save
         if: always()
@@ -562,6 +831,7 @@ jobs:
           GATE_OUTCOME: ${{ steps.gate.outcome }}
           SEARCH_OUTCOME: ${{ steps.search.outcome }}
           SAVE_OUTCOME: ${{ steps.save.outcome }}
+          REPORT_OUTCOME: ${{ steps.report.outcome }}
         shell: bash
         run: |
           python3 - <<'PY'
@@ -577,6 +847,8 @@ jobs:
                   "Paused: saving progress failed. "
                   "Manual review required to avoid repeated requests."
               )
+          elif os.environ["REPORT_OUTCOME"] == "failure":
+              reason = "Paused: report generation failed; review logs."
           elif os.environ["GATE_OUTCOME"] == "failure":
               reason = (
                   "Paused: scanner preparation or checkpoint validation failed."
