@@ -105,8 +105,8 @@
     "Antminer S19j Pro",
     "Antminer S19k Pro"
   ],
-  "cursor": 85,
-  "last_run": 1792441836.5312862,
+  "cursor": 96,
+  "last_run": 1792441914.4694703,
   "pages": [
     {
       "next": 2,
@@ -534,48 +534,59 @@
       "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false
+      "next": 2,
+      "done": true,
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false
+      "next": 2,
+      "done": true,
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false
+      "next": 2,
+      "done": true,
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false
+      "next": 2,
+      "done": true,
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false
+      "next": 2,
+      "done": true,
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false
+      "next": 2,
+      "done": true,
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false
+      "next": 2,
+      "done": true,
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false
+      "next": 2,
+      "done": true,
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false
+      "next": 2,
+      "done": true,
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false
+      "next": 2,
+      "done": true,
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false
+      "next": 2,
+      "done": true,
+      "api_limit_reached": false
     },
     {
       "next": 1,
@@ -628,8 +639,8 @@
     1792439417.39991
   ],
   "consecutive_errors": 0,
-  "api_budget_reserved": 102,
-  "api_successful_requests": 51,
-  "api_charged_reported": 102,
+  "api_budget_reserved": 126,
+  "api_successful_requests": 62,
+  "api_charged_reported": 124,
   "search_mode": "personal_api_key"
 }
