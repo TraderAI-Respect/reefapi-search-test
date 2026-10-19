@@ -1,0 +1,36 @@
+{
+  "query": "асики партия",
+  "page": 4,
+  "pagination": {
+    "page": 4,
+    "has_more": true
+  },
+  "ads": [
+    {
+      "ad_id": "7571678232",
+      "title": "Осевые вентиляторы YWF новые для майнинга",
+      "url": "https://www.avito.ru/chita/bytovaya_tehnika/osevye_ventilyatory_ywf_novye_dlya_mayninga_7571678232",
+      "price": 3762,
+      "price_text": "3 762 ₽",
+      "price_per_unit": null,
+      "price_is_from": false,
+      "published_at": "2026-09-29T09:38:19Z",
+      "description_snippet": "Вентилятор вытяжной и приточный осевой 220/380В.\n\nНизкие, зафиксированные в диалоге, актуальны и действуют для наших покупателей с Авито, просто назовите кодовое слово «Авито» на кассе!\n\nАдрес нашего магазина в Чите:\n\nул. Нечаева, 37 (с правого торца...",
+      "params_summary": null,
+      "city": "Чита"
+    },
+    {
+      "ad_id": "7507489550",
+      "title": "Вентилятор вытяжной и приточный осевой 220/380В",
+      "url": "https://www.avito.ru/angarsk/bytovaya_tehnika/ventilyator_vytyazhnoy_i_pritochnyy_osevoy_220380v_7507489550",
+      "price": 4562,
+      "price_text": "4 562 ₽",
+      "price_per_unit": null,
+      "price_is_from": false,
+      "published_at": "2026-09-29T07:59:20Z",
+      "description_snippet": "Вентиляторы осевые всех нужных диаметров.\n\nНизкие цены из объявлений актуальны и действуют для наших покупателей с Авито, просто назовите кодовое слово «Авито» на кассе!\n\nНаш адрес в Ангарске:\n\nул. Богдана Хмельницкого, 36.\n\nЧасы работы: Пн-Пт: 9:00-...",
+      "params_summary": null,
+      "city": "Ангарск"
+    }
+  ]
+}
