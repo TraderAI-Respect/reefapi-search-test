@@ -588,6 +588,47 @@ jobs:
           from pathlib import Path
           from urllib.parse import urlsplit
           
+          BRAND_ALIASES = {
+              'антмайнер':'antminer', 'антминер':'antminer', 'антмайнeр':'antminer',
+              'битмайн':'bitmain', 'битмейн':'bitmain',
+              'ватсмайнер':'whatsminer', 'вотсмайнер':'whatsminer', 'вацмайнер':'whatsminer',
+              'микробт':'microbt', 'инносиликон':'innosilicon', 'иносиликон':'innosilicon',
+              'инносилликон':'innosilicon', 'авалон':'avalon', 'канаан':'canaan',
+              'битфури':'bitfury', 'битфьюри':'bitfury', 'эбит':'ebit',
+              'хаммер':'hummer', 'айден':'aiden', 'аладдин':'aladdin', 'чита':'cheetah',
+              'про':'pro', 'мини':'mini', 'турбо':'turbo', 'гидро':'hydro',
+              'хр':'xp', 'хп':'xp',
+          }
+          MODEL_LETTERS = str.maketrans({'с':'s','т':'t','л':'l','м':'m','а':'a','д':'d',
+              'з':'z','б':'b','в':'b','н':'h','к':'k','е':'e','и':'i','ж':'j','ф':'f','х':'x'})
+          
+          def normalize_models(text):
+              """Normalize only brands/model-shaped tokens, preserving Russian sales text."""
+              def word(match):
+                  value = match.group().lower()
+                  if value in BRAND_ALIASES:
+                      return BRAND_ALIASES[value]
+                  for alias, brand in BRAND_ALIASES.items():
+                      if brand in ('pro','mini','turbo','hydro','xp'):
+                          continue
+                      if value.startswith(alias) and re.match(r'[a-zа-яё]?\d', value[len(alias):]):
+                          value = brand + ' ' + value[len(alias):]
+                          break
+                  chunks = value.split(' ')
+                  result = []
+                  for chunk in chunks:
+                      if re.match(r'^[a-zа-яё]{1,4}\d', chunk):
+                          chunk = re.sub(r'про(?=\+?$)', 'pro', chunk)
+                          chunk = re.sub(r'(?:хр|хп)(?=\+?$)', 'xp', chunk)
+                          chunk = re.sub(r'гидро$', 'hydro', chunk)
+                          chunk = chunk.translate(MODEL_LETTERS)
+                      result.append(chunk)
+                  return ' '.join(result)
+              text = re.sub(r'[a-zа-яё][a-zа-яё0-9+/-]*', word, str(text), flags=re.I)
+              text = re.sub(r'\b(antminer|bitmain|whatsminer|microbt|innosilicon|avalon|canaan|bitfury|ebit)(?=[a-z]?\d)', r'\1 ', text, flags=re.I)
+              text = re.sub(r'(?<=pro)\s+с\b', ' s', text, flags=re.I)
+              return text
+          
           TOKEN = re.compile(
               r'\b(?:s19(?:\s*[jkie])?(?:\s*pro\+?)?(?:\s*xp\+?)?(?:\s*(?:hydro|hyd))?|s17(?:\s*pro|\+|e)?|s9[a-z]*|s7(?:-f1)?|s5|'
               r't19|t17[a-z+]*|t15|t9\+|l3\+{0,2}|d3|z9\s*mini|m\d+[a-z+]*|'
@@ -597,7 +638,7 @@ jobs:
               r'a?921|a?920h?|841|a?851|a?852|e10|e9(?:\s*miner\+)?|'
               r'b8|bt200|h7\s*pro|a1|f1)(?![a-z0-9+])', re.I)
           BRANDED = re.compile(r'\b(?:antminer|whatsminer|microbt|innosilicon|avalon|canaan|ebit|bitfury|hummer|aiden|aladdin|cheetah)\b', re.I)
-          PARTS = re.compile(r'х[еэ]ш.?плат|контрольн|\bкпу\b|\bбп\b|блок[аи]?\s+питани|корпус|вентил|кулер|шлейф|кабел|коса|чип|водоблок|жидкост|ванна|стойк|стеллаж|трафарет|тестер|контейнер|фланец|термопаст|разъ[её]м|коннектор|планка|шумбокс', re.I)
+          PARTS = re.compile(r'х[еэ]ш.?плат|контрольн|контроллер|конвертер|переходник|эмулятор|\bкпу\b|\bбп\b|блок[аи]?\s+питани|корпус|вентил|кулер|шлейф|кабел|коса|чип|водоблок|жидкост|ванна|стойк|стеллаж|трафарет|тестер|контейнер|фланец|термопаст|разъ[её]м|коннектор|планка|шумбокс', re.I)
           BUYER = re.compile(r'выкуп|скупк|куплю|покупаем|выкупаем|при[её]м|утилизац|ремонт|хостинг|размещен|настройка|прошивка', re.I)
           UNITS = r'(?:шт(?:ук(?:и|а)?)?\.?|устройств\w*|аппарат\w*|асик\w*|майнер\w*|комплект\w*)'
           QTY = re.compile(r'(?<![\d.,])(?P<lo>\d{1,5})(?:\s*[–—-]\s*(?P<hi>\d{1,5}))?\s*' + UNITS, re.I)
@@ -605,6 +646,7 @@ jobs:
           PRICE = re.compile(r'(\d[\d\s.,]*\s*(?:₽|руб\.?|р\.))\s*(?:/\s*(?:шт\.?|комплект)|за\s+(?:1\s*)?(?:шт\w*|комплект))', re.I)
           
           def identify(line):
+              line = normalize_models(line)
               matches = list(TOKEN.finditer(line))
               if not matches:
                   if re.search(r'\baladdin\s*miner\b', line, re.I):
@@ -616,6 +658,8 @@ jobs:
                   valid, minimum, required, name = True, 20, None, None
                   if token in ('a10', 'a10pro', 'a11', 'a11pro'):
                       minimum, name = 1, 'Innosilicon ' + token.upper().replace('PRO', ' Pro')
+                      if re.search(r'\b(?:avalon|canaan)\b', line, re.I):
+                          valid = False
                   elif token.startswith('s19'):
                       name, minimum = 'Antminer ' + match.group().upper(), 15
                       valid = not ('xp' in token or 'hyd' in token)
@@ -634,6 +678,8 @@ jobs:
                       required = {'t3s':{39},'t3h':{50},'t3+':set(range(50,58)), 't2t':{29,32},'t2tz':{30},'t2tti':{25},'t2tsr':{25},'t2thf':{27},'t2tth+':{37}}.get(token)
                   elif token in ('1126pros','1146pro','1066pro','1046','921','a921','920h','a920h','841','851','a851','852','a852'):
                       name = 'Avalon ' + token.upper().replace('PROS',' Pro S').replace('PRO',' Pro')
+                      if token[0].isdigit() and not re.search(r'\b(?:avalon|canaan)\s*$', line[:match.start()], re.I):
+                          valid = False
                       required = {'1126pros':{68},'1146pro':{63},'1066pro':{55}}.get(token)
                   elif token in ('e10','e9miner+','b8','bt200','h7pro','a1','f1'):
                       name = {'e10':'Ebit E10','e9miner+':'Ebit E9 Miner+','b8':'Bitfury B8','bt200':'Bitfury BT200','h7pro':'Hummer Miner H7 Pro','a1':'Aiden Miner A1','f1':'Cheetah Miner F1'}[token]
@@ -672,11 +718,30 @@ jobs:
                   return [], []
               if re.search(r'выкупаем|выкуплю|скупаем|куплю|утилизац|принимаем ваши', desc, re.I):
                   return [], []
+              title = normalize_models(title)
+              normalized_desc = normalize_models(desc)
               title_models = identify(title)
               current = title_models[0] if len(title_models) == 1 else None
               groups = []
               segment = []
-              for line in desc.splitlines():
+              # Split multiple model offers sharing a line before assigning stock.
+              clauses = []
+              for line in normalized_desc.splitlines():
+                  tokens = list(TOKEN.finditer(line))
+                  boundaries = []
+                  brands = list(BRANDED.finditer(line))
+                  for previous_model, model in zip(tokens, tokens[1:]):
+                      boundary = model.start()
+                      for brand in brands:
+                          if previous_model.end() <= brand.start() < model.start() and not line[brand.end():model.start()].strip():
+                              boundary = brand.start()
+                      boundaries.append(boundary)
+                  previous = 0
+                  for boundary in boundaries:
+                      clauses.append(line[previous:boundary])
+                      previous = boundary
+                  clauses.append(line[previous:])
+              for line in clauses:
                   if not line.strip():
                       continue
                   models = identify(line)
