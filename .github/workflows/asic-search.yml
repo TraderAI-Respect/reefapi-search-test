@@ -1,0 +1,181 @@
+name: ASIC search Russia
+
+on:
+  workflow_dispatch:
+    inputs:
+      batch:
+        description: "Группа моделей: 0–5. Начни с 0."
+        required: true
+        default: "0"
+
+permissions: {}
+
+jobs:
+  search:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      SEARCH_BATCH: ${{ inputs.batch }}
+
+    steps:
+      - name: Install cloud browser
+        run: |
+          python3 -m venv .venv
+          .venv/bin/pip install playwright==1.55.0
+          .venv/bin/python -m playwright install --with-deps chromium
+
+      - name: Search Avito through free ReefAPI demo
+        run: |
+          .venv/bin/python - <<'PY'
+          import json
+          import os
+          import re
+          from urllib.parse import urlsplit
+          from playwright.sync_api import sync_playwright
+
+          queries = [
+              "Antminer S19", "Antminer T19", "Antminer S17",
+              "Antminer T17", "Antminer T15", "Antminer S9",
+              "Antminer T9+", "Antminer S7", "Antminer S5",
+              "Antminer L3",
+              "Antminer D3", "Antminer Z9 Mini",
+              "Whatsminer M31S", "Whatsminer M20S", "Whatsminer M21S",
+              "Innosilicon T3S", "Innosilicon T3H", "Innosilicon T3+",
+              "Innosilicon T2T", "Innosilicon T2 Turbo",
+              "Innosilicon T2TZ", "Innosilicon T2Ti",
+              "Innosilicon T2TTi", "Innosilicon T2TS",
+              "Innosilicon T2Tsr", "Innosilicon T2THF",
+              "Innosilicon T2THM", "Innosilicon A10 Pro",
+              "Avalon 1126", "Avalon 1146",
+              "Avalon 1066", "Avalon 1046",
+              "Avalon 921", "Avalon 920", "Avalon 841",
+              "Avalon 851", "Avalon 852",
+              "Ebit E10", "Ebit E9", "Bitfury B8",
+              "Bitfury BT200", "Hummer Miner H7 Pro",
+              "Aiden Miner A1", "Aladdin Miner", "Cheetah Miner F1",
+              "асики партия", "асики оптом", "асики на запчасти",
+              "майнеры неисправные", "майнинг ферма",
+              "асики 20 штук", "асики 50 штук",
+              "асики 100 штук", "майнеры партия",
+          ]
+          batch = int(os.environ["SEARCH_BATCH"])
+          if not 0 <= batch <= 5:
+              raise SystemExit("Batch must be between 0 and 5.")
+          selected = queries[batch * 10:(batch + 1) * 10]
+          print("QUERIES " + json.dumps(selected, ensure_ascii=False))
+
+          def collect_ads(value, output):
+              if isinstance(value, dict):
+                  url = value.get("url") or value.get("link")
+                  title = value.get("title") or value.get("name")
+                  if isinstance(url, str) and title:
+                      host = urlsplit(url).hostname or ""
+                      if (
+                          (host == "avito.ru" or host.endswith(".avito.ru"))
+                          and re.search(r"_\d{6,}(?:[/?#]|$)", url)
+                      ):
+                          output[url] = value
+                  for child in value.values():
+                      collect_ads(child, output)
+              elif isinstance(value, list):
+                  for child in value:
+                      collect_ads(child, output)
+
+          with sync_playwright() as p:
+              browser = p.chromium.launch()
+              context = browser.new_context()
+
+              for query in selected:
+                  page = context.new_page()
+                  state = {"changed": False}
+                  report = {
+                      "query": query,
+                      "location": "all",
+                      "batch": batch,
+                      "ads": [],
+                  }
+                  try:
+                      page.goto(
+                          "https://reefapi.com/playground?action=search&engine=avito",
+                          wait_until="domcontentloaded",
+                          timeout=45000,
+                      )
+                      button = page.get_by_role(
+                          "button", name=re.compile("Send request", re.I)
+                      )
+                      button.wait_for(state="visible", timeout=30000)
+
+                      def rewrite(value):
+                          found = False
+                          if isinstance(value, dict):
+                              if "query" in value:
+                                  value.update({
+                                      "query": query,
+                                      "location": "all",
+                                      "page": 1,
+                                      "sort": "relevance",
+                                      "category_detection": False,
+                                  })
+                                  value.pop("category", None)
+                                  found = True
+                              else:
+                                  for child in value.values():
+                                      found = rewrite(child) or found
+                          elif isinstance(value, list):
+                              for child in value:
+                                  found = rewrite(child) or found
+                          return found
+
+                      def route_request(route):
+                          request = route.request
+                          if request.method != "POST":
+                              route.continue_()
+                              return
+                          body = request.post_data_json
+                          if not rewrite(body):
+                              route.abort()
+                              return
+                          state["changed"] = True
+                          route.continue_(post_data=json.dumps(body))
+
+                      page.route("**/api/proxy", route_request)
+
+                      with page.expect_response(
+                          lambda r: (
+                              r.request.method == "POST"
+                              and urlsplit(r.url).path == "/api/proxy"
+                          ),
+                          timeout=90000,
+                      ) as pending:
+                          button.click(timeout=15000)
+
+                      response = pending.value
+                      report["http_status"] = response.status
+                      report["query_rewritten"] = state["changed"]
+                      payload = response.json()
+                      if isinstance(payload, dict):
+                          report["api_ok"] = payload.get("ok")
+                          report["api_error"] = payload.get("error")
+
+                      if not state["changed"]:
+                          raise RuntimeError("Search parameters not changed.")
+
+                      ads = {}
+                      collect_ads(payload, ads)
+                      report["ads"] = list(ads.values())
+                      report["count"] = len(ads)
+
+                  except Exception as exc:
+                      report["failure"] = str(exc)[:1500]
+                  finally:
+                      page.close()
+
+                  print("RESULT " + json.dumps(report, ensure_ascii=False),
+                        flush=True)
+
+                  if report.get("http_status") in (401, 403, 429):
+                      print("STOP: access or demo limit; no automatic retries.")
+                      break
+
+              browser.close()
+          PY
