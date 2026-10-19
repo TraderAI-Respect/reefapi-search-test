@@ -132,6 +132,17 @@
     "url": "https://www.avito.ru/moskva/oborudovanie_dlya_biznesa/asic_antminer_s19k_pro_120th_novye_8283200592"
   },
   {
+    "ad_id": "8413428589",
+    "model": "Antminer S19K PRO 270T",
+    "quantity_min": 100,
+    "quantity": "100 шт.",
+    "city": "Москва",
+    "price": "Цена нужной модели не установлена",
+    "condition": "Б/у",
+    "evidence": "в наличии >100 шт.",
+    "url": "https://www.avito.ru/moskva/oborudovanie_dlya_biznesa/s19k_pro_120th_alyuminiy_8413428589"
+  },
+  {
     "ad_id": "3694066193",
     "model": "Avalon 841",
     "quantity_min": 25,
@@ -141,5 +152,60 @@
     "condition": "Уточнить",
     "evidence": "продам avalon 841 с блоком питания. цена за 1 шт 2100, с блоком питания 3100 руб. всего 25шт.",
     "url": "https://www.avito.ru/obninsk/tovary_dlya_kompyutera/avalon_3694066193"
+  },
+  {
+    "ad_id": "8270821046",
+    "model": "Innosilicon A10",
+    "quantity_min": 1,
+    "quantity": "от 1; остаток не указан",
+    "city": "Иркутск",
+    "price": "Цена нужной модели не установлена",
+    "condition": "Уточнить",
+    "evidence": "Продажа A10/A11; точный остаток не указан",
+    "url": "https://www.avito.ru/irkutsk/tovary_dlya_kompyutera/shumoboks_dlya_asika_bu_8270821046"
+  },
+  {
+    "ad_id": "4655998630",
+    "model": "Innosilicon A10",
+    "quantity_min": 1,
+    "quantity": "от 1; остаток не указан",
+    "city": "Москва",
+    "price": "Цена нужной модели не установлена",
+    "condition": "Уточнить",
+    "evidence": "Продажа A10/A11; точный остаток не указан",
+    "url": "https://www.avito.ru/moskva/tovary_dlya_kompyutera/k4zaf325bm-hc14_pamyat_4655998630"
+  },
+  {
+    "ad_id": "8326113572",
+    "model": "Innosilicon A11",
+    "quantity_min": 1,
+    "quantity": "от 1; остаток не указан",
+    "city": "Красноярск",
+    "price": "Карточка: 35 000 ₽; единица цены не подтверждена",
+    "condition": "Уточнить",
+    "evidence": "Продажа A10/A11; точный остаток не указан",
+    "url": "https://www.avito.ru/krasnoyarsk/nastolnye_kompyutery/innosilicon_a11_mx_8326113572"
+  },
+  {
+    "ad_id": "7850805970",
+    "model": "Innosilicon A11",
+    "quantity_min": 3,
+    "quantity": "3 асика",
+    "city": "Москва",
+    "price": "Карточка: 98 000 ₽; единица цены не подтверждена",
+    "condition": "Б/у",
+    "evidence": "3 асика innosilicon a11 в отличном состоянии!",
+    "url": "https://www.avito.ru/moskva/oborudovanie_dlya_biznesa/asik_innosilicon_a11_asik_7850805970"
+  },
+  {
+    "ad_id": "7850805970",
+    "model": "Innosilicon A11 Pro",
+    "quantity_min": 1,
+    "quantity": "от 1; остаток не указан",
+    "city": "Москва",
+    "price": "Цена нужной модели не установлена",
+    "condition": "Б/у",
+    "evidence": "Продажа A10/A11; точный остаток не указан",
+    "url": "https://www.avito.ru/moskva/oborudovanie_dlya_biznesa/asik_innosilicon_a11_asik_7850805970"
   }
 ]
