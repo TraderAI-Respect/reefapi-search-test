@@ -1,4 +1,4 @@
-name: ASIC full scan
+ name: ASIC full scan
 
 on:
   workflow_dispatch:
@@ -109,6 +109,12 @@ jobs:
               "Antminer S19j Pro",
               "Antminer S19k Pro",
           ]
+          DISABLED_QUERIES = {
+              "майнинг ферма",
+              "асики 20 штук",
+              "асики 50 штук",
+              "асики 100 штук",
+          }
           BUDGET = 900
           COST = 2
           MAX_PAGE = 30
@@ -130,7 +136,18 @@ jobs:
               state.setdefault('api_successful_requests', 0)
               state.setdefault('api_charged_reported', 0)
               state['search_mode'] = 'personal_api_key'
+              # Keep query indices, page positions, completion flags and credit counters intact.
+              for query, entry in zip(state['queries'], state['pages']):
+                  entry['disabled'] = query in DISABLED_QUERIES
               return state
+          
+          def active_indices(state):
+              return [i for i, entry in enumerate(state['pages'])
+                      if not entry.get('done') and not entry.get('disabled')]
+          
+          def complete(state):
+              return bool(state.get('pages')) and all(
+                  entry.get('done') or entry.get('disabled') for entry in state['pages'])
           
           def reserve(state):
               if state.get('api_budget_reserved', 0) + COST > BUDGET:
@@ -215,18 +232,20 @@ jobs:
           
           def allowed(state, now):
               return (bool(state.get('pages')) and not state.get('paused')
-                      and not all(x.get('done') for x in state['pages'])
+                      and not complete(state)
                       and now >= state.get('not_before',0)
                       and state.get('api_budget_reserved',0)+COST <= BUDGET)
           
           def enforce_budget(state):
-              if state['api_budget_reserved']+COST > BUDGET and not all(x.get('done') for x in state['pages']):
+              if state['api_budget_reserved']+COST > BUDGET and not complete(state):
                   state['paused'] = True
                   state['last_error'] = {'code':'LOCAL_CREDIT_BUDGET', 'message':'Local 900-credit reserve reached; search incomplete.'}
           
           def summary(state):
-              done = sum(bool(x.get('done')) for x in state['pages'])
-              message = (f'Completed queries: {done}/{len(state["queries"])}\n'
+              active = [entry for entry in state['pages'] if not entry.get('disabled')]
+              done = sum(bool(x.get('done')) for x in active)
+              disabled = len(state['pages']) - len(active)
+              message = (f'Completed active queries: {done}/{len(active)}; disabled: {disabled}\n'
                          f'Personal-key successful requests: {state["api_successful_requests"]}\n'
                          f'Conservative credit reservation: {state["api_budget_reserved"]}/{BUDGET}\n'
                          f'Paused: {bool(state.get("paused"))}\n')
@@ -262,7 +281,7 @@ jobs:
               for _ in range(batch_size(state)):
                   if not allowed(state,time.time()):
                       break
-                  active = [i for i,p in enumerate(state['pages']) if not p.get('done')]
+                  active = active_indices(state)
                   index = next((i for i in active if i>=state['cursor']),active[0])
                   query, number = state['queries'][index], state['pages'][index]['next']
                   if not 1 <= number <= MAX_PAGE:
@@ -615,9 +634,10 @@ jobs:
               if state_path.exists():
                   state = json.loads(state_path.read_text(encoding='utf-8'))
                   entries = state.get('pages', [])
-                  finished = sum(bool(x.get('done')) for x in entries)
-                  caps = sum(bool(x.get('api_limit_reached')) for x in entries)
-                  text += ['', f'Завершены запросы: {finished}/{len(entries)}. Достигли предела 30 страниц: {caps}.']
+                  active = [x for x in entries if not x.get('disabled')]
+                  finished = sum(bool(x.get('done')) for x in active)
+                  caps = sum(bool(x.get('api_limit_reached')) for x in active)
+                  text += ['', f'Завершены активные запросы: {finished}/{len(active)}. Отключены: {len(entries)-len(active)}. Достигли предела 30 страниц: {caps}.']
                   if state.get('search_mode') == 'personal_api_key':
                       reserved = state.get('api_budget_reserved', 0)
                       succeeded = state.get('api_successful_requests', 0)
@@ -719,14 +739,15 @@ jobs:
                           "See last_error in the checkpoint."
                       )
                   elif pages and all(
-                      page.get("done") for page in pages
+                      page.get("done") or page.get("disabled") for page in pages
                   ):
                       capped = sum(
                           bool(page.get("api_limit_reached"))
-                          for page in pages
+                          for page in pages if not page.get("disabled")
                       )
                       reason = (
-                          "Finished: all accessible pages processed. "
+                          "Finished: all accessible pages of enabled queries processed (up to API limit). "
+                          f"Disabled queries: {sum(bool(p.get('disabled')) for p in pages)}. "
                           f"Queries reaching the API page limit: {capped}."
                       )
 
@@ -778,7 +799,7 @@ jobs:
           
           def next_run(state, started, now):
               pages = state.get('pages', [])
-              if (not pages or state.get('paused') or all(x.get('done') for x in pages)
+              if (not pages or state.get('paused') or all(x.get('done') or x.get('disabled') for x in pages)
                       or state.get('api_budget_reserved',0) >= 900):
                   return None
               return max(started + 300, float(state.get('not_before',0)), now) + 5
