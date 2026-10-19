@@ -99,8 +99,8 @@
     "Ebit E9 Miner+",
     "Bitfury B8 50"
   ],
-  "cursor": 11,
-  "last_run": 1792432557.0457783,
+  "cursor": 19,
+  "last_run": 1792434981.1402652,
   "pages": [
     {
       "next": 2,
@@ -158,36 +158,44 @@
       "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false
+      "next": 2,
+      "done": true,
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false
+      "next": 2,
+      "done": false,
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false
+      "next": 2,
+      "done": false,
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false
+      "next": 2,
+      "done": false,
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false
+      "next": 2,
+      "done": true,
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false
+      "next": 2,
+      "done": true,
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false
+      "next": 2,
+      "done": false,
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false
+      "next": 2,
+      "done": false,
+      "api_limit_reached": false
     },
     {
       "next": 1,
@@ -508,12 +516,15 @@
   ],
   "request_times": [
     1792432454.2183337,
-    1792432501.7917192
+    1792432501.7917192,
+    1792434874.6846197,
+    1792434879.5341525,
+    1792434907.2944021,
+    1792434933.6255236,
+    1792434939.6600823,
+    1792434947.7594225,
+    1792434971.9906173,
+    1792434978.1082895
   ],
-  "consecutive_errors": 1,
-  "last_error": {
-    "query": "Antminer Z9 Mini",
-    "page": 1,
-    "message": "HTTP 504"
-  }
+  "consecutive_errors": 0
 }
