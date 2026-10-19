@@ -108,13 +108,9 @@ jobs:
               "Antminer S19 Pro",
               "Antminer S19j Pro",
               "Antminer S19k Pro",
+              "асики",
           ]
-          DISABLED_QUERIES = {
-              "майнинг ферма",
-              "асики 20 штук",
-              "асики 50 штук",
-              "асики 100 штук",
-          }
+          DISABLED_QUERIES = {'асики 20 штук','асики 50 штук','асики 100 штук'}
           BUDGET = 900
           COST = 2
           MAX_PAGE = 30
@@ -139,15 +135,34 @@ jobs:
               # Keep query indices, page positions, completion flags and credit counters intact.
               for query, entry in zip(state['queries'], state['pages']):
                   entry['disabled'] = query in DISABLED_QUERIES
+              # Recover this query-level pause only; never clear auth/budget pauses.
+              error = state.get('last_error') or {}
+              if state.get('paused') and error.get('code') == 'INVALID_PARAM':
+                  index = state.get('cursor',0)
+                  if isinstance(index,int) and 0 <= index < len(state['pages']):
+                      block_query(state,index,error.get('status',0),'INVALID_PARAM',
+                                  'Recovered saved INVALID_PARAM; original message was not recorded.')
+                      state.pop('paused',None)
+                      state['recovery'] = 'Known INVALID_PARAM isolated; other queries resumed.'
               return state
+          
+          def block_query(state, index, status, code, message):
+              entry = state['pages'][index]
+              entry['blocked'] = {'status':status,'code':code,'page':entry['next'],
+                                  'message':str(message)[:400]}
+              state['last_query_error'] = {'query_index':index,'query':state['queries'][index],
+                                           **entry['blocked']}
+              state['cursor'] = (index+1) % len(state['queries'])
+              state['consecutive_errors'] = 0
+              state.pop('last_error',None)
           
           def active_indices(state):
               return [i for i, entry in enumerate(state['pages'])
-                      if not entry.get('done') and not entry.get('disabled')]
+                      if not entry.get('done') and not entry.get('disabled') and not entry.get('blocked')]
           
           def complete(state):
               return bool(state.get('pages')) and all(
-                  entry.get('done') or entry.get('disabled') for entry in state['pages'])
+                  entry.get('done') or entry.get('disabled') or entry.get('blocked') for entry in state['pages'])
           
           def reserve(state):
               if state.get('api_budget_reserved', 0) + COST > BUDGET:
@@ -245,7 +260,9 @@ jobs:
               active = [entry for entry in state['pages'] if not entry.get('disabled')]
               done = sum(bool(x.get('done')) for x in active)
               disabled = len(state['pages']) - len(active)
+              blocked = sum(bool(x.get('blocked')) for x in active)
               message = (f'Completed active queries: {done}/{len(active)}; disabled: {disabled}\n'
+                         f'Queries requiring review (not completed): {blocked}\n'
                          f'Personal-key successful requests: {state["api_successful_requests"]}\n'
                          f'Conservative credit reservation: {state["api_budget_reserved"]}/{BUDGET}\n'
                          f'Paused: {bool(state.get("paused"))}\n')
@@ -306,8 +323,16 @@ jobs:
                       if status != 200 or not isinstance(payload,dict) or payload.get('ok') is not True:
                           error = payload.get('error') if isinstance(payload,dict) else None
                           code = error.get('code') if isinstance(error,dict) else None
-                          failure(state,status,code,time.time(),headers)
-                          failed = True
+                          if code == 'INVALID_PARAM' and status in (200,400,422):
+                              message = str(error.get('message') or 'API rejected query/page parameters.')
+                              message = message.replace(key,'[REDACTED]')
+                              message = re.sub(r'ak_live_[A-Za-z0-9_-]+','[REDACTED]',message)
+                              message = re.sub(r'https?://\S+','[URL REDACTED]',message)
+                              block_query(state,index,status,code,message)
+                              print(f'Query {index}, page {number} deferred: INVALID_PARAM. Continuing other queries.',flush=True)
+                          else:
+                              failure(state,status,code,time.time(),headers)
+                              failed = True
                       else:
                           # Validate and advance a copy; only install it after saving the page.
                           next_state = json.loads(json.dumps(state))
@@ -422,6 +447,7 @@ jobs:
           BRANDED = re.compile(r'\b(?:antminer|whatsminer|microbt|innosilicon|avalon|canaan|ebit|bitfury|hummer|aiden|aladdin|cheetah)\b', re.I)
           PARTS = re.compile(r'х[еэ]ш.?плат|контрольн|контроллер|конвертер|переходник|эмулятор|\bкпу\b|\bбп\b|блок[аи]?\s+питани|корпус|вентил|кулер|шлейф|кабел|коса|чип|водоблок|жидкост|ванна|стойк|стеллаж|трафарет|тестер|контейнер|фланец|термопаст|разъ[её]м|коннектор|планка|шумбокс', re.I)
           BUYER = re.compile(r'выкуп|скупк|куплю|покупаем|выкупаем|при[её]м|утилизац|ремонт|хостинг|размещен|настройка|прошивка', re.I)
+          ACCESSORY = re.compile(r'фильтр|filter|памят|memory|микросхем|комплектующ|запчаст|аксессуар|accessor|пылезащит|воздуховод|шумоглуш|ddr|eeprom|nand', re.I)
           UNITS = r'(?:шт(?:ук(?:и|а)?)?\.?|устройств\w*|аппарат\w*|асик\w*|майнер\w*|комплект\w*)'
           QTY = re.compile(r'(?<![\d.,])(?P<lo>\d{1,5})(?:\s*[–—-]\s*(?P<hi>\d{1,5}))?\s*' + UNITS, re.I)
           RATE = re.compile(r'(\d+(?:[.,]\d+)?)(?:\s*[/–-]\s*(\d+(?:[.,]\d+)?))?\s*(?:th|t[hx]?|тх|т|gh|g|г)(?:\b|/)', re.I)
@@ -496,7 +522,9 @@ jobs:
           def classify(ad):
               title, desc = str(ad.get('title') or ''), str(ad.get('description_snippet') or '')
               url = listing_url(ad)
-              if not url or BUYER.search(title) or PARTS.search(title):
+              # Whole faulty miners sold "на запчасти" are allowed, accessory lots are not.
+              title_goods = re.sub(r'на\s+запчасти', '', title, flags=re.I)
+              if not url or BUYER.search(title) or PARTS.search(title) or ACCESSORY.search(title_goods):
                   return [], []
               if re.search(r'выкупаем|выкуплю|скупаем|куплю|утилизац|принимаем ваши', desc, re.I):
                   return [], []
@@ -546,6 +574,13 @@ jobs:
                       continue
                   quantity = None
                   for line in segment.splitlines():
+                      accessory = ACCESSORY.search(re.sub(r'на\s+запчасти', '           ', line, flags=re.I))
+                      if accessory:
+                          prefix = line[:accessory.start()]
+                          # "120 комплектов фильтров" counts accessories, not whole miners.
+                          if not re.search(r'\d+\s*(?:асик\w*|майнер\w*|аппарат\w*|устройств\w*)',prefix,re.I) and not re.search(r'[.!?]\s*$',prefix):
+                              continue
+                          line = prefix
                       if PARTS.search(line) or re.search(r'мин(?:имальн\w*)?\s+заказ|заказ\s+от|вмещ|помещ|мест\b|от\s*\d+\s*' + UNITS, line, re.I):
                           continue
                       if re.search(r'продан|продал|продано', line, re.I):
@@ -558,7 +593,10 @@ jobs:
                           if q['hi'] and int(q['hi']) < lo:
                               continue
                           quantity = (lo, q.group(), line.strip())
-                  if quantity is None and model['minimum'] == 1:
+                  implicit_single = (any(m['valid'] and m['model']==model['model'] for m in title_models)
+                                     and (not ACCESSORY.search(re.sub(r'на\s+запчасти','',segment,flags=re.I)) or
+                                          re.search(r'продам\s+(?:свой\s+)?(?:рабочи[йе]\s+)?(?:асик|майнер)',segment,re.I)))
+                  if quantity is None and model['minimum'] == 1 and implicit_single:
                       # Single-device eligibility, not an invented stock count.
                       quantity = (1, 'от 1; остаток не указан', 'Продажа A10/A11; точный остаток не указан')
                   if not quantity or quantity[0] < model['minimum']:
@@ -638,6 +676,15 @@ jobs:
                   finished = sum(bool(x.get('done')) for x in active)
                   caps = sum(bool(x.get('api_limit_reached')) for x in active)
                   text += ['', f'Завершены активные запросы: {finished}/{len(active)}. Отключены: {len(entries)-len(active)}. Достигли предела 30 страниц: {caps}.']
+                  blocked = [(i,x) for i,x in enumerate(entries) if x.get('blocked') and not x.get('disabled')]
+                  if blocked:
+                      text += ['', '**Запросы с ошибкой: отложены, не считаются завершёнными. Остальные продолжаются.**', '',
+                               '| Запрос | Страница | Ошибка |', '|---|---|---|']
+                      for index, entry in blocked:
+                          error = entry['blocked']
+                          text.append('| ' + ' | '.join(cell(v) for v in [
+                              state['queries'][index],error['page'],
+                              str(error['code'])+': '+str(error.get('message',''))]) + ' |')
                   if state.get('search_mode') == 'personal_api_key':
                       reserved = state.get('api_budget_reserved', 0)
                       succeeded = state.get('api_successful_requests', 0)
@@ -739,14 +786,18 @@ jobs:
                           "See last_error in the checkpoint."
                       )
                   elif pages and all(
-                      page.get("done") or page.get("disabled") for page in pages
+                      page.get("done") or page.get("disabled") or page.get("blocked") for page in pages
                   ):
                       capped = sum(
                           bool(page.get("api_limit_reached"))
                           for page in pages if not page.get("disabled")
                       )
+                      blocked = sum(bool(p.get('blocked')) for p in pages if not p.get('disabled'))
                       reason = (
-                          "Finished: all accessible pages of enabled queries processed (up to API limit). "
+                          ("Stopped: remaining queries require review; this is NOT a complete scan. "
+                           if blocked else "Finished: accessible pages processed up to API limit. ")
+                          + f"Queries requiring review: {blocked}. "
+                          + 
                           f"Disabled queries: {sum(bool(p.get('disabled')) for p in pages)}. "
                           f"Queries reaching the API page limit: {capped}."
                       )
@@ -799,7 +850,7 @@ jobs:
           
           def next_run(state, started, now):
               pages = state.get('pages', [])
-              if (not pages or state.get('paused') or all(x.get('done') or x.get('disabled') for x in pages)
+              if (not pages or state.get('paused') or all(x.get('done') or x.get('disabled') or x.get('blocked') for x in pages)
                       or state.get('api_budget_reserved',0) >= 900):
                   return None
               return max(started + 300, float(state.get('not_before',0)), now) + 5
