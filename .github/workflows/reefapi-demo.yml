@@ -1,0 +1,135 @@
+name: ReefAPI free demo
+
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  search:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+
+    steps:
+      - name: Install browser on GitHub server
+        run: |
+          python3 -m venv .venv
+          .venv/bin/pip install playwright==1.55.0
+          .venv/bin/python -m playwright install --with-deps chromium
+
+      - name: Run one free ReefAPI demo search
+        timeout-minutes: 3
+        run: |
+          .venv/bin/python - <<'PY'
+          import json
+          import os
+          import re
+          from datetime import datetime, timezone
+          from urllib.parse import urlsplit
+          from playwright.sync_api import sync_playwright
+
+          report = {
+              "time_utc": datetime.now(timezone.utc).isoformat(),
+              "execution": "GitHub-hosted Ubuntu",
+              "mode": "Public ReefAPI playground, no personal API key",
+              "live_response_received": False,
+              "listings": [],
+          }
+
+          def is_search_response(response):
+              request = response.request
+              host = urlsplit(response.url).hostname or ""
+              return (
+                  request.method == "POST"
+                  and (host == "reefapi.com"
+                       or host.endswith(".reefapi.com"))
+                  and ("avito" in response.url.lower()
+                       or "avito" in (request.post_data or "").lower())
+              )
+
+          def find_listings(value):
+              if isinstance(value, dict):
+                  title = value.get("title") or value.get("name")
+                  url = value.get("url") or value.get("link")
+                  if isinstance(url, str) and title:
+                      host = urlsplit(url).hostname or ""
+                      if (
+                          (host == "avito.ru" or host.endswith(".avito.ru"))
+                          and re.search(r"_\d{6,}(?:[/?#]|$)", url)
+                      ):
+                          report["listings"].append({
+                              "title": title,
+                              "url": url,
+                              "price": value.get("price"),
+                          })
+                  for child in value.values():
+                      find_listings(child)
+              elif isinstance(value, list):
+                  for child in value:
+                      find_listings(child)
+
+          with sync_playwright() as p:
+              browser = p.chromium.launch()
+              page = browser.new_page()
+              try:
+                  response = page.goto(
+                      "https://reefapi.com/playground?action=search&engine=avito",
+                      wait_until="domcontentloaded",
+                      timeout=45000,
+                  )
+                  report["page_http_status"] = (
+                      response.status if response else None
+                  )
+                  button = page.get_by_role(
+                      "button",
+                      name=re.compile(r"Send request", re.I),
+                  )
+                  button.wait_for(state="visible", timeout=30000)
+
+                  with page.expect_response(
+                      is_search_response, timeout=75000
+                  ) as pending:
+                      button.click(timeout=15000)
+
+                  response = pending.value
+                  report["api_http_status"] = response.status
+                  report["api_path"] = urlsplit(response.url).path
+                  payload = response.json()
+                  report["live_response_received"] = True
+                  if isinstance(payload, dict):
+                      report["response_keys"] = list(payload)
+                      report["api_ok"] = payload.get("ok")
+                      report["api_error"] = payload.get("error")
+                  find_listings(payload)
+              except Exception as exc:
+                  report["failure"] = str(exc)[:1500]
+                  try:
+                      report["page_title"] = page.title()
+                      report["visible_buttons"] = (
+                          page.get_by_role("button").all_text_contents()[:15]
+                      )
+                  except Exception:
+                      pass
+              finally:
+                  browser.close()
+
+          report["listing_count_detected"] = len(report["listings"])
+          report["listings"] = report["listings"][:5]
+          report["search_verified"] = (
+              report["live_response_received"]
+              and report.get("api_http_status") == 200
+              and report.get("api_ok") is not False
+              and report["listing_count_detected"] > 0
+          )
+          output = json.dumps(report, ensure_ascii=False, indent=2)
+          print(output)
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as summary:
+              summary.write("# ReefAPI live test\n\n```json\n")
+              summary.write(output)
+              summary.write("\n```\n")
+
+          if not report["search_verified"]:
+              raise SystemExit(
+                  "Search not verified. See the diagnostic report."
+              )
+          PY
