@@ -39,24 +39,22 @@ jobs:
 
       - name: Prepare scanner and check quota
         id: gate
+        env:
+          REEF_API_KEY: ${{ secrets.REEF_API_KEY }}
         shell: bash
         run: |
           cat > /tmp/asic_scan.py <<'PY'
+          """Direct ReefAPI search; API keys are read from the runner environment only."""
           import json
           import os
           import re
           import sys
           import time
-          from pathlib import Path
-          from urllib.parse import urlsplit
+          import urllib.error
+          import urllib.request
           from email.utils import parsedate_to_datetime
-
-          LIMIT = 15
-          WINDOW = 3600
-          MAX_PAGE = 30
-          ROOT = Path("results")
-          CHECKPOINT = ROOT / "asic-progress.json"
-
+          from pathlib import Path
+          
           QUERIES = [
               "Antminer S19", "Antminer T19", "Antminer S17",
               "Antminer T17", "Antminer T15", "Antminer S9",
@@ -111,466 +109,231 @@ jobs:
               "Antminer S19j Pro",
               "Antminer S19k Pro",
           ]
-
+          BUDGET = 900
+          COST = 2
+          MAX_PAGE = 30
+          CHECKPOINT = Path('results/asic-progress.json')
+          
+          def initialize(state, queries):
+              if state is None:
+                  state = {'queries':list(queries), 'pages':[{'next':1,'done':False} for _ in queries],
+                           'cursor':0, 'last_run':0}
+              saved = state.get('queries', [])
+              if len(state.get('pages', [])) != len(saved) or not saved:
+                  raise RuntimeError('Invalid checkpoint; refusing to restart.')
+              if saved != queries:
+                  if queries[:len(saved)] != saved:
+                      raise RuntimeError('Query order differs; checkpoint preserved.')
+                  state['pages'].extend({'next':1,'done':False} for _ in queries[len(saved):])
+                  state['queries'] = list(queries)
+              state.setdefault('api_budget_reserved', 0)
+              state.setdefault('api_successful_requests', 0)
+              state.setdefault('api_charged_reported', 0)
+              state['search_mode'] = 'personal_api_key'
+              return state
+          
+          def reserve(state):
+              if state.get('api_budget_reserved', 0) + COST > BUDGET:
+                  state['paused'] = True
+                  state['last_error'] = {'code':'LOCAL_CREDIT_BUDGET', 'message':'Reserved API budget exhausted; not a completed scan.'}
+                  raise RuntimeError('Local credit budget exhausted.')
+              state['api_budget_reserved'] = state.get('api_budget_reserved', 0) + COST
+          
+          def make_request(key, query, page):
+              body = {'query':query, 'location':'all', 'page':page, 'sort':'relevance',
+                      'category_detection':False, 'include_sponsored':True,
+                      'include_fallback_results':False, 'include_pii':False}
+              return urllib.request.Request('https://api.reefapi.com/avito/v1/search',
+                  method='POST', data=json.dumps(body).encode('utf-8'),
+                  headers={'x-api-key':key, 'Content-Type':'application/json', 'Accept':'application/json',
+                           'User-Agent':'ASIC-search-GitHub-Actions'})
+          
+          def accept_page(state, index, payload):
+              if not isinstance(payload, dict) or payload.get('ok') is not True:
+                  raise ValueError('Invalid API response envelope.')
+              data = payload.get('data')
+              if not isinstance(data, dict) or not isinstance(data.get('listings'), list):
+                  raise ValueError('Missing listings array; page not advanced.')
+              number = state['pages'][index]['next']
+              echoed = data.get('page')
+              if echoed is not None and str(echoed) != str(number):
+                  raise ValueError('Returned page differs; page not advanced.')
+              if not all(isinstance(row, dict) for row in data['listings']):
+                  raise ValueError('Invalid listing record; page not advanced.')
+              nested = data.get('pagination')
+              nested = nested if isinstance(nested, dict) else {}
+              more = data.get('has_more', nested.get('has_more'))
+              has_next = data.get('has_next', nested.get('has_next'))
+              total = data.get('total_pages', nested.get('total_pages'))
+              if not isinstance(more, bool) and not isinstance(has_next, bool) and not isinstance(total, int):
+                  raise ValueError('Missing pagination; page not advanced.')
+              exhausted = more is False or has_next is False or (isinstance(total,int) and number >= total)
+              entry = state['pages'][index]
+              entry.update(next=number+1, done=exhausted or number>=MAX_PAGE,
+                           api_limit_reached=number>=MAX_PAGE and not exhausted)
+              state['cursor'] = (index+1) % len(state['queries'])
+              state['api_successful_requests'] += 1
+              state['consecutive_errors'] = 0
+              state.pop('last_error', None)
+              meta = payload.get('meta')
+              charged = meta.get('charged_credits') if isinstance(meta,dict) else None
+              if isinstance(charged,(int,float)) and not isinstance(charged,bool) and charged >= 0:
+                  state['api_charged_reported'] = state.get('api_charged_reported',0) + charged
+                  if charged > COST:
+                      state['paused'] = True
+                      state['last_error'] = {'code':'COST_CHANGED', 'message':'Reported cost exceeded 2 credits; review required.'}
+              return data
+          
+          def failure(state, status, code, now, headers):
+              safe_codes = {'AUTH_FAILED','QUOTA_EXCEEDED','RATE_LIMITED','UPSTREAM_TIMEOUT',
+                            'TARGET_BLOCKED','DISABLED','MISSING_PARAM','INVALID_PARAM','PARSE_ERROR','INTERNAL'}
+              code = code if code in safe_codes else 'API_ERROR'
+              state['last_error'] = {'status':status, 'code':code}
+              state['consecutive_errors'] = state.get('consecutive_errors',0) + 1
+              if status == 429 or code == 'RATE_LIMITED':
+                  until = now + 60
+                  value = headers.get('retry-after', '')
+                  try:
+                      until = max(until, now+float(value))
+                  except (ValueError,TypeError):
+                      try:
+                          until = max(until, parsedate_to_datetime(value).timestamp())
+                      except Exception:
+                          pass
+                  state['not_before'] = until
+              elif status in (400,401,402,403) or code in ('AUTH_FAILED','QUOTA_EXCEEDED') or state['consecutive_errors'] >= 3:
+                  state['paused'] = True
+          
+          def batch_size(state):
+              return 50 if state.get('api_successful_requests',0) else 1
+          
           def write_json(path, value):
               path.parent.mkdir(parents=True, exist_ok=True)
-              temporary = path.with_suffix(path.suffix + ".tmp")
-              temporary.write_text(
-                  json.dumps(value, ensure_ascii=False, indent=2),
-                  encoding="utf-8",
-              )
+              temporary = path.with_suffix(path.suffix+'.tmp')
+              temporary.write_text(json.dumps(value,ensure_ascii=False,indent=2)+'\n', encoding='utf-8')
               temporary.replace(path)
-
-          if CHECKPOINT.exists():
-              state = json.loads(CHECKPOINT.read_text(encoding="utf-8"))
-          else:
-              pages_folder = ROOT / "pages"
-              if pages_folder.exists() and any(pages_folder.glob("*.json")):
-                  raise RuntimeError(
-                      "Results exist but checkpoint is missing. "
-                      "Refusing to restart from zero."
-                  )
-              state = {
-                  "queries": QUERIES,
-                  "cursor": 0,
-                  "last_run": 0,
-                  "pages": [
-                      {"next": 1, "done": False} for _ in QUERIES
-                  ],
-              }
-
-          saved_queries = state.get("queries", [])
-          if (
-              saved_queries != QUERIES
-              and saved_queries
-              and QUERIES[:len(saved_queries)] == saved_queries
-              and len(state.get("pages", [])) == len(saved_queries)
-          ):
-              state["pages"].extend(
-                  {"next": 1, "done": False}
-                  for _ in QUERIES[len(saved_queries):]
-              )
-              state["queries"] = QUERIES
-
-          if state.get("queries") != QUERIES:
-              raise RuntimeError(
-                  "Query list differs from saved progress. "
-                  "Checkpoint preserved; review required."
-              )
-          if len(state.get("pages", [])) != len(QUERIES):
-              raise RuntimeError("Invalid checkpoint page count.")
-
-          # Conservatively migrate the previous workflow's cooldown.
-          if "request_times" not in state:
-              previous = state.get("last_run", 0)
-              state["request_times"] = (
-                  [previous] * LIMIT if previous else []
-              )
-
-          def save():
-              write_json(CHECKPOINT, state)
-
-          def recent_requests():
-              now = time.time()
-              state["request_times"] = [
-                  timestamp for timestamp in state["request_times"]
-                  if timestamp > now - WINDOW
-              ]
-              return len(state["request_times"])
-
-          def complete():
-              return all(entry.get("done") for entry in state["pages"])
-
-          def allowed():
-              return (
-                  not complete()
-                  and not state.get("paused", False)
-                  and time.time() >= state.get("not_before", 0)
-                  and recent_requests() < LIMIT
-              )
-
-          def summary():
-              finished = sum(
-                  bool(entry.get("done")) for entry in state["pages"]
-              )
-              capped = sum(
-                  bool(entry.get("api_limit_reached"))
-                  for entry in state["pages"]
-              )
-              message = (
-                  f"Completed queries: {finished}/{len(QUERIES)}\n"
-                  f"Queries stopped at API page limit: {capped}\n"
-                  f"Requests in last rolling hour: "
-                  f"{recent_requests()}/{LIMIT}\n"
-                  f"All accessible pages processed: {complete()}\n"
-                  f"Paused: {bool(state.get('paused', False))}\n"
-              )
-              if state.get("last_error"):
-                  message += (
-                      "Last error: "
-                      + json.dumps(
-                          state["last_error"], ensure_ascii=False
-                      )
-                      + "\n"
-                  )
-              print(message)
-              with open(
-                  os.environ["GITHUB_STEP_SUMMARY"],
-                  "a",
-                  encoding="utf-8",
-              ) as output:
-                  output.write("```text\n" + message + "```\n\n")
-
-          if sys.argv[1] == "--check":
-              can_run = allowed()
-              save()
-              with open(os.environ["GITHUB_OUTPUT"], "a") as output:
-                  output.write(
-                      f"run={str(can_run).lower()}\n"
-                  )
-              summary()
-              raise SystemExit(0)
-
-          if not allowed():
-              summary()
-              raise SystemExit(0)
-
-          from playwright.sync_api import sync_playwright
-
-          def rewrite(value, query, number):
-              if isinstance(value, dict):
-                  if "query" in value:
-                      value.update(
-                          query=query,
-                          location="all",
-                          page=number,
-                          sort="relevance",
-                          category_detection=False,
-                          include_sponsored=True,
-                          include_fallback_results=False,
-                          include_pii=False,
-                      )
-                      value.pop("category", None)
-                      return True
-                  changed = False
-                  for child in value.values():
-                      changed = (
-                          rewrite(child, query, number) or changed
-                      )
-                  return changed
-              if isinstance(value, list):
-                  changed = False
-                  for child in value:
-                      changed = (
-                          rewrite(child, query, number) or changed
-                      )
-                  return changed
-              return False
-
-          def defer_after_rate_limit(response):
-              until = time.time() + WINDOW
-              value = response.headers.get("retry-after", "")
-              try:
-                  until = max(until, time.time() + float(value))
-              except ValueError:
-                  try:
-                      until = max(
-                          until,
-                          parsedate_to_datetime(value).timestamp(),
-                      )
-                  except Exception:
-                      pass
-              state["not_before"] = until
-              save()
-
-          with sync_playwright() as playwright:
-              browser = playwright.chromium.launch()
-              context = browser.new_context()
-
-              for attempt in range(LIMIT):
-                  if not allowed():
+          
+          def allowed(state, now):
+              return (bool(state.get('pages')) and not state.get('paused')
+                      and not all(x.get('done') for x in state['pages'])
+                      and now >= state.get('not_before',0)
+                      and state.get('api_budget_reserved',0)+COST <= BUDGET)
+          
+          def enforce_budget(state):
+              if state['api_budget_reserved']+COST > BUDGET and not all(x.get('done') for x in state['pages']):
+                  state['paused'] = True
+                  state['last_error'] = {'code':'LOCAL_CREDIT_BUDGET', 'message':'Local 900-credit reserve reached; search incomplete.'}
+          
+          def summary(state):
+              done = sum(bool(x.get('done')) for x in state['pages'])
+              message = (f'Completed queries: {done}/{len(state["queries"])}\n'
+                         f'Personal-key successful requests: {state["api_successful_requests"]}\n'
+                         f'Conservative credit reservation: {state["api_budget_reserved"]}/{BUDGET}\n'
+                         f'Paused: {bool(state.get("paused"))}\n')
+              if state.get('last_error'):
+                  message += 'Last error: ' + json.dumps(state['last_error'],ensure_ascii=False)+'\n'
+              print(message, flush=True)
+              with open(os.environ['GITHUB_STEP_SUMMARY'],'a',encoding='utf-8') as stream:
+                  stream.write('\n```text\n'+message+'```\n')
+          
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, request, fp, code, msg, headers, newurl):
+                  return None
+          
+          def main():
+              if CHECKPOINT.exists():
+                  state = initialize(json.loads(CHECKPOINT.read_text(encoding='utf-8')), QUERIES)
+              else:
+                  if any(Path('results/pages').glob('*.json')):
+                      raise RuntimeError('Saved results without checkpoint; refusing to restart.')
+                  state = initialize(None, QUERIES)
+              key = os.environ.get('REEF_API_KEY','').strip()
+              if not key:
+                  state['paused'] = True
+                  state['last_error'] = {'code':'MISSING_SECRET', 'message':'REEF_API_KEY is not available to this GitHub job.'}
+              enforce_budget(state)
+              write_json(CHECKPOINT,state)
+              if sys.argv[1] == '--check':
+                  with open(os.environ['GITHUB_OUTPUT'],'a') as stream:
+                      stream.write('run='+str(allowed(state,time.time())).lower()+'\n')
+                  summary(state)
+                  return
+              opener = urllib.request.build_opener(NoRedirect())
+              for _ in range(batch_size(state)):
+                  if not allowed(state,time.time()):
                       break
-
-                  active = [
-                      index for index, entry
-                      in enumerate(state["pages"])
-                      if not entry.get("done")
-                  ]
-                  index = next(
-                      (
-                          candidate for candidate in active
-                          if candidate >= state["cursor"]
-                      ),
-                      active[0],
-                  )
-                  query = QUERIES[index]
-                  number = state["pages"][index]["next"]
-
+                  active = [i for i,p in enumerate(state['pages']) if not p.get('done')]
+                  index = next((i for i in active if i>=state['cursor']),active[0])
+                  query, number = state['queries'][index], state['pages'][index]['next']
                   if not 1 <= number <= MAX_PAGE:
-                      raise RuntimeError(
-                          "Invalid page in checkpoint; review required."
-                      )
-
-                  page = context.new_page()
-                  changed = {"ok": False}
-                  attempt_failed = False
-
+                      raise RuntimeError('Invalid page in checkpoint.')
+                  reserve(state)
+                  write_json(CHECKPOINT,state)
+                  failed = False
                   try:
-                      page.goto(
-                          "https://reefapi.com/playground"
-                          "?action=search&engine=avito",
-                          wait_until="domcontentloaded",
-                          timeout=45000,
-                      )
-                      button = page.get_by_role(
-                          "button",
-                          name=re.compile("Send request", re.I),
-                      )
-                      button.wait_for(
-                          state="visible", timeout=30000
-                      )
-
-                      def intercept(route):
-                          request = route.request
-                          if request.method != "POST":
-                              route.continue_()
-                              return
-
+                      status, headers, payload = 200, {}, None
+                      try:
+                          with opener.open(make_request(key,query,number),timeout=90) as response:
+                              status = response.status
+                              headers = {k.lower():v for k,v in response.headers.items()}
+                              payload = json.load(response)
+                      except urllib.error.HTTPError as error:
+                          status = error.code
+                          headers = {k.lower():v for k,v in error.headers.items()}
                           try:
-                              body = request.post_data_json
-                              if not rewrite(body, query, number):
-                                  route.abort()
-                                  return
-
-                              if (
-                                  recent_requests() >= LIMIT
-                                  or time.time()
-                                  < state.get("not_before", 0)
-                              ):
-                                  route.abort()
-                                  return
-
-                              # Reserve quota BEFORE sending.
-                              # Failed requests also consume our budget.
-                              state["request_times"].append(
-                                  time.time()
-                              )
-                              save()
-                              changed["ok"] = True
-                              route.continue_(
-                                  post_data=json.dumps(body)
-                              )
+                              payload = json.load(error)
                           except Exception:
-                              route.abort()
-                              raise
-
-                      page.route("**/api/proxy", intercept)
-
-                      with page.expect_response(
-                          lambda response: (
-                              response.request.method == "POST"
-                              and urlsplit(response.url).path
-                              == "/api/proxy"
-                          ),
-                          timeout=90000,
-                      ) as pending:
-                          button.click(timeout=15000)
-
-                      response = pending.value
-
-                      if response.status == 429:
-                          defer_after_rate_limit(response)
-                          raise RuntimeError(
-                              "HTTP 429: demo quota reached; "
-                              "waiting before retry."
-                          )
-
-                      if response.status in (401, 403):
-                          state["paused"] = True
-                          raise RuntimeError(
-                              f"HTTP {response.status}: "
-                              "access denied; manual review required."
-                          )
-
-                      if response.status != 200:
-                          raise RuntimeError(
-                              f"HTTP {response.status}"
-                          )
-
-                      payload = response.json()
-                      if not isinstance(payload, dict):
-                          raise RuntimeError(
-                              "Unexpected response envelope."
-                          )
-                      if (
-                          not changed["ok"]
-                          or payload.get("ok") is False
-                      ):
-                          raise RuntimeError(
-                              "API error: "
-                              + str(payload.get("error"))[:1000]
-                          )
-
-                      data = payload.get("data")
-                      if not isinstance(data, dict):
-                          raise RuntimeError(
-                              "Unexpected response data."
-                          )
-                      rows = data.get("listings")
-                      if not isinstance(rows, list):
-                          raise RuntimeError(
-                              "No listings array; page not advanced."
-                          )
-
-                      echoed_page = data.get("page")
-                      if (
-                          isinstance(echoed_page, int)
-                          and echoed_page != number
-                      ):
-                          raise RuntimeError(
-                              "API returned a different page."
-                          )
-
-                      fields = [
-                          "ad_id", "title", "url",
-                          "price", "price_text", "price_per_unit",
-                          "price_is_from", "published_at",
-                          "description_snippet", "params_summary",
-                      ]
-                      ads = []
-                      for row in rows:
-                          if not isinstance(row, dict):
-                              raise RuntimeError(
-                                  "Unexpected listing format."
-                              )
-                          item = {
-                              field: row.get(field)
-                              for field in fields
-                          }
-                          item["city"] = (
-                              row.get("location") or {}
-                          ).get("name")
-                          ads.append(item)
-
-                      pagination = {
-                          key: data.get(key)
-                          for key in [
-                              "page", "has_more", "has_next",
-                              "total_pages", "total_results",
-                              "pagination",
-                          ]
-                          if key in data
-                      }
-                      report = {
-                          "query": query,
-                          "page": number,
-                          "pagination": pagination,
-                          "ads": ads,
-                      }
-                      write_json(
-                          ROOT / "pages"
-                          / f"{index:03d}-{number:02d}.json",
-                          report,
-                      )
-
-                      nested = data.get("pagination")
-                      nested = (
-                          nested if isinstance(nested, dict)
-                          else {}
-                      )
-                      more = data.get(
-                          "has_more", nested.get("has_more")
-                      )
-                      has_next = data.get(
-                          "has_next", nested.get("has_next")
-                      )
-                      total = data.get(
-                          "total_pages", nested.get("total_pages")
-                      )
-                      exhausted = (
-                          more is False
-                          or has_next is False
-                          or (
-                              isinstance(total, int)
-                              and number >= total
-                          )
-                      )
-
-                      entry = state["pages"][index]
-                      entry["next"] = number + 1
-                      entry["done"] = (
-                          exhausted or number >= MAX_PAGE
-                      )
-                      entry["api_limit_reached"] = (
-                          number >= MAX_PAGE and not exhausted
-                      )
-
-                      state["cursor"] = (
-                          index + 1
-                      ) % len(QUERIES)
-                      state["consecutive_errors"] = 0
-                      state.pop("last_error", None)
-                      print(
-                          "RESULT "
-                          + json.dumps(
-                              report, ensure_ascii=False
-                          ),
-                          flush=True,
-                      )
-
-                  except Exception as error:
-                      attempt_failed = True
-                      state["consecutive_errors"] = (
-                          state.get("consecutive_errors", 0) + 1
-                      )
-                      state["last_error"] = {
-                          "query": query,
-                          "page": number,
-                          "message": str(error)[:1500],
-                      }
-                      # Rate limits are retried after their cooldown.
-                      if (
-                          state["consecutive_errors"] >= 3
-                          and time.time()
-                          >= state.get("not_before", 0)
-                      ):
-                          state["paused"] = True
-                      print(
-                          "ERROR "
-                          + json.dumps(
-                              state["last_error"],
-                              ensure_ascii=False,
-                          ),
-                          flush=True,
-                      )
+                              payload = None
+                      if status != 200 or not isinstance(payload,dict) or payload.get('ok') is not True:
+                          error = payload.get('error') if isinstance(payload,dict) else None
+                          code = error.get('code') if isinstance(error,dict) else None
+                          failure(state,status,code,time.time(),headers)
+                          failed = True
+                      else:
+                          # Validate and advance a copy; only install it after saving the page.
+                          next_state = json.loads(json.dumps(state))
+                          data = accept_page(next_state,index,payload)
+                          fields = ['ad_id','title','url','price','price_text','price_per_unit',
+                                    'price_is_from','published_at','description_snippet','params_summary']
+                          ads = []
+                          for row in data['listings']:
+                              item = {field:row.get(field) for field in fields}
+                              location = row.get('location')
+                              item['city'] = location.get('name') if isinstance(location,dict) else None
+                              # Never persist a credential even if an upstream response echoes it.
+                              item = {k:(v.replace(key,'[REDACTED]') if isinstance(v,str) else v) for k,v in item.items()}
+                              ads.append(item)
+                          pagination = {k:data[k] for k in ['page','has_more','has_next','total_pages','total_results','pagination'] if k in data}
+                          write_json(Path(f'results/pages/{index:03d}-{number:02d}.json'),
+                                     {'query':query,'page':number,'pagination':pagination,'ads':ads})
+                          state = next_state
+                          print(f'Saved query {index}, page {number}: {len(ads)} listings.',flush=True)
+                  except Exception:
+                      # Deliberately do not print exceptions, request headers or response bodies.
+                      failure(state,0,'API_ERROR',time.time(),{})
+                      failed = True
                   finally:
-                      state["last_run"] = time.time()
-                      save()
-                      page.close()
-
-                  if attempt_failed:
+                      state['last_run'] = time.time()
+                      enforce_budget(state)
+                      write_json(CHECKPOINT,state)
+                  if failed:
                       break
-
-              browser.close()
-
-          summary()
+                  time.sleep(1)
+              summary(state)
+          
+          if __name__ == '__main__':
+              main()
           PY
           python3 /tmp/asic_scan.py --check
-
-      - name: Install cloud browser
-        if: steps.gate.outputs.run == 'true'
-        shell: bash
-        run: |
-          python3 -m venv .venv
-          .venv/bin/pip install playwright==1.55.0
-          .venv/bin/python -m playwright install --with-deps chromium
 
       - name: Search next pages
         id: search
         if: steps.gate.outputs.run == 'true'
+        env:
+          REEF_API_KEY: ${{ secrets.REEF_API_KEY }}
         shell: bash
         run: |
-          .venv/bin/python /tmp/asic_scan.py --run
+          python3 /tmp/asic_scan.py --run
 
       - name: Build matching ASIC table
         id: report
@@ -855,6 +618,11 @@ jobs:
                   finished = sum(bool(x.get('done')) for x in entries)
                   caps = sum(bool(x.get('api_limit_reached')) for x in entries)
                   text += ['', f'Завершены запросы: {finished}/{len(entries)}. Достигли предела 30 страниц: {caps}.']
+                  if state.get('search_mode') == 'personal_api_key':
+                      reserved = state.get('api_budget_reserved', 0)
+                      succeeded = state.get('api_successful_requests', 0)
+                      text += ['', f'Личный API-ключ: успешных запросов {succeeded}. Консервативный резерв расхода: {reserved}/900 кредитов. '
+                               'Это счётчик workflow, не фактический баланс ReefAPI; ошибки тоже резервируются.']
                   if state.get('last_error'):
                       text += ['', 'Последняя ошибка поиска: ' + cell(json.dumps(state['last_error'], ensure_ascii=False))]
                   if state.get('paused'):
@@ -1010,13 +778,10 @@ jobs:
           
           def next_run(state, started, now):
               pages = state.get('pages', [])
-              if not pages or state.get('paused') or all(x.get('done') for x in pages):
+              if (not pages or state.get('paused') or all(x.get('done') for x in pages)
+                      or state.get('api_budget_reserved',0) >= 900):
                   return None
-              due = max(started + 3600, float(state.get('not_before', 0)), now)
-              recent = sorted(t for t in state.get('request_times', []) if t > now - 3600)
-              if len(recent) >= 15:
-                  due = max(due, recent[len(recent)-15] + 3600)
-              return due + 5
+              return max(started + 300, float(state.get('not_before',0)), now) + 5
           
           def main():
               path = Path('results/asic-progress.json')
