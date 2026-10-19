@@ -1,4 +1,4 @@
- name: ASIC full scan
+name: ASIC full scan
 
 on:
   workflow_dispatch:
