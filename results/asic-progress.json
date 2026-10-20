@@ -104,10 +104,192 @@
     "Antminer S19 Pro",
     "Antminer S19j Pro",
     "Antminer S19k Pro",
-    "асики"
+    "асики",
+    "Antminer | Иркутск",
+    "Antminer | Красноярск",
+    "Antminer | Братск",
+    "Antminer | Ангарск",
+    "Antminer | Новосибирск",
+    "Antminer | Кемерово",
+    "Antminer | Томск",
+    "Antminer | Омск",
+    "Antminer | Челябинск",
+    "Antminer | Екатеринбург",
+    "Antminer | Пермь",
+    "Antminer | Казань",
+    "Antminer | Уфа",
+    "Whatsminer | Иркутск",
+    "Whatsminer | Красноярск",
+    "Whatsminer | Братск",
+    "Whatsminer | Ангарск",
+    "Whatsminer | Новосибирск",
+    "Whatsminer | Кемерово",
+    "Whatsminer | Томск",
+    "Whatsminer | Омск",
+    "Whatsminer | Челябинск",
+    "Whatsminer | Екатеринбург",
+    "Whatsminer | Пермь",
+    "Whatsminer | Казань",
+    "Whatsminer | Уфа",
+    "Innosilicon A10 | Иркутск",
+    "Innosilicon A10 | Красноярск",
+    "Innosilicon A10 | Братск",
+    "Innosilicon A10 | Ангарск",
+    "Innosilicon A10 | Новосибирск",
+    "Innosilicon A10 | Кемерово",
+    "Innosilicon A10 | Томск",
+    "Innosilicon A10 | Омск",
+    "Innosilicon A10 | Челябинск",
+    "Innosilicon A10 | Екатеринбург",
+    "Innosilicon A10 | Пермь",
+    "Innosilicon A10 | Казань",
+    "Innosilicon A10 | Уфа",
+    "Innosilicon A10 Pro | Иркутск",
+    "Innosilicon A10 Pro | Красноярск",
+    "Innosilicon A10 Pro | Братск",
+    "Innosilicon A10 Pro | Ангарск",
+    "Innosilicon A10 Pro | Новосибирск",
+    "Innosilicon A10 Pro | Кемерово",
+    "Innosilicon A10 Pro | Томск",
+    "Innosilicon A10 Pro | Омск",
+    "Innosilicon A10 Pro | Челябинск",
+    "Innosilicon A10 Pro | Екатеринбург",
+    "Innosilicon A10 Pro | Пермь",
+    "Innosilicon A10 Pro | Казань",
+    "Innosilicon A10 Pro | Уфа",
+    "Innosilicon A11 | Иркутск",
+    "Innosilicon A11 | Красноярск",
+    "Innosilicon A11 | Братск",
+    "Innosilicon A11 | Ангарск",
+    "Innosilicon A11 | Новосибирск",
+    "Innosilicon A11 | Кемерово",
+    "Innosilicon A11 | Томск",
+    "Innosilicon A11 | Омск",
+    "Innosilicon A11 | Челябинск",
+    "Innosilicon A11 | Екатеринбург",
+    "Innosilicon A11 | Пермь",
+    "Innosilicon A11 | Казань",
+    "Innosilicon A11 | Уфа",
+    "Innosilicon A11 Pro | Иркутск",
+    "Innosilicon A11 Pro | Красноярск",
+    "Innosilicon A11 Pro | Братск",
+    "Innosilicon A11 Pro | Ангарск",
+    "Innosilicon A11 Pro | Новосибирск",
+    "Innosilicon A11 Pro | Кемерово",
+    "Innosilicon A11 Pro | Томск",
+    "Innosilicon A11 Pro | Омск",
+    "Innosilicon A11 Pro | Челябинск",
+    "Innosilicon A11 Pro | Екатеринбург",
+    "Innosilicon A11 Pro | Пермь",
+    "Innosilicon A11 Pro | Казань",
+    "Innosilicon A11 Pro | Уфа",
+    "Innosilicon | Иркутск",
+    "Innosilicon | Красноярск",
+    "Innosilicon | Братск",
+    "Innosilicon | Ангарск",
+    "Innosilicon | Новосибирск",
+    "Innosilicon | Кемерово",
+    "Innosilicon | Томск",
+    "Innosilicon | Омск",
+    "Innosilicon | Челябинск",
+    "Innosilicon | Екатеринбург",
+    "Innosilicon | Пермь",
+    "Innosilicon | Казань",
+    "Innosilicon | Уфа",
+    "Avalon | Иркутск",
+    "Avalon | Красноярск",
+    "Avalon | Братск",
+    "Avalon | Ангарск",
+    "Avalon | Новосибирск",
+    "Avalon | Кемерово",
+    "Avalon | Томск",
+    "Avalon | Омск",
+    "Avalon | Челябинск",
+    "Avalon | Екатеринбург",
+    "Avalon | Пермь",
+    "Avalon | Казань",
+    "Avalon | Уфа",
+    "Bitfury | Иркутск",
+    "Bitfury | Красноярск",
+    "Bitfury | Братск",
+    "Bitfury | Ангарск",
+    "Bitfury | Новосибирск",
+    "Bitfury | Кемерово",
+    "Bitfury | Томск",
+    "Bitfury | Омск",
+    "Bitfury | Челябинск",
+    "Bitfury | Екатеринбург",
+    "Bitfury | Пермь",
+    "Bitfury | Казань",
+    "Bitfury | Уфа",
+    "Ebit | Иркутск",
+    "Ebit | Красноярск",
+    "Ebit | Братск",
+    "Ebit | Ангарск",
+    "Ebit | Новосибирск",
+    "Ebit | Кемерово",
+    "Ebit | Томск",
+    "Ebit | Омск",
+    "Ebit | Челябинск",
+    "Ebit | Екатеринбург",
+    "Ebit | Пермь",
+    "Ebit | Казань",
+    "Ebit | Уфа",
+    "Hummer Miner | Иркутск",
+    "Hummer Miner | Красноярск",
+    "Hummer Miner | Братск",
+    "Hummer Miner | Ангарск",
+    "Hummer Miner | Новосибирск",
+    "Hummer Miner | Кемерово",
+    "Hummer Miner | Томск",
+    "Hummer Miner | Омск",
+    "Hummer Miner | Челябинск",
+    "Hummer Miner | Екатеринбург",
+    "Hummer Miner | Пермь",
+    "Hummer Miner | Казань",
+    "Hummer Miner | Уфа",
+    "Aiden Miner | Иркутск",
+    "Aiden Miner | Красноярск",
+    "Aiden Miner | Братск",
+    "Aiden Miner | Ангарск",
+    "Aiden Miner | Новосибирск",
+    "Aiden Miner | Кемерово",
+    "Aiden Miner | Томск",
+    "Aiden Miner | Омск",
+    "Aiden Miner | Челябинск",
+    "Aiden Miner | Екатеринбург",
+    "Aiden Miner | Пермь",
+    "Aiden Miner | Казань",
+    "Aiden Miner | Уфа",
+    "Aladdin Miner | Иркутск",
+    "Aladdin Miner | Красноярск",
+    "Aladdin Miner | Братск",
+    "Aladdin Miner | Ангарск",
+    "Aladdin Miner | Новосибирск",
+    "Aladdin Miner | Кемерово",
+    "Aladdin Miner | Томск",
+    "Aladdin Miner | Омск",
+    "Aladdin Miner | Челябинск",
+    "Aladdin Miner | Екатеринбург",
+    "Aladdin Miner | Пермь",
+    "Aladdin Miner | Казань",
+    "Aladdin Miner | Уфа",
+    "Cheetah Miner | Иркутск",
+    "Cheetah Miner | Красноярск",
+    "Cheetah Miner | Братск",
+    "Cheetah Miner | Ангарск",
+    "Cheetah Miner | Новосибирск",
+    "Cheetah Miner | Кемерово",
+    "Cheetah Miner | Томск",
+    "Cheetah Miner | Омск",
+    "Cheetah Miner | Челябинск",
+    "Cheetah Miner | Екатеринбург",
+    "Cheetah Miner | Пермь",
+    "Cheetah Miner | Казань",
+    "Cheetah Miner | Уфа"
   ],
-  "cursor": 7,
-  "last_run": 1792479772.9923654,
+  "cursor": 155,
+  "last_run": 1792481104.7127478,
   "pages": [
     {
       "next": 31,
@@ -168,7 +350,7 @@
     },
     {
       "next": 2,
-      "done": false,
+      "done": true,
       "api_limit_reached": false,
       "disabled": false,
       "previous_query_error": {
@@ -177,12 +359,13 @@
         "page": 2,
         "message": "Recovered saved INVALID_PARAM; original message was not recorded."
       },
-      "blocked": {
+      "end_of_pages": {
         "status": 200,
         "code": "INVALID_PARAM",
         "page": 2,
         "message": "page 2 is past Avito's last page for this search"
-      }
+      },
+      "exhaustion_source": "api_last_page"
     },
     {
       "next": 2,
@@ -946,6 +1129,1148 @@
       "done": true,
       "disabled": false,
       "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": false,
+      "disabled": false,
+      "search_location": "Иркутск",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": false,
+      "disabled": false,
+      "search_location": "Красноярск",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": false,
+      "disabled": false,
+      "search_location": "Братск",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": false,
+      "disabled": false,
+      "search_location": "Ангарск",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": false,
+      "disabled": false,
+      "search_location": "Новосибирск",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": false,
+      "disabled": false,
+      "search_location": "Кемерово",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": false,
+      "disabled": false,
+      "search_location": "Томск",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": false,
+      "disabled": false,
+      "search_location": "Омск",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": false,
+      "disabled": false,
+      "search_location": "Челябинск",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": false,
+      "disabled": false,
+      "search_location": "Екатеринбург",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": false,
+      "disabled": false,
+      "search_location": "Пермь",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": false,
+      "disabled": false,
+      "search_location": "Казань",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": false,
+      "disabled": false,
+      "search_location": "Уфа",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": false,
+      "disabled": false,
+      "search_location": "Иркутск",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": false,
+      "disabled": false,
+      "search_location": "Красноярск",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": false,
+      "disabled": false,
+      "search_location": "Братск",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": false,
+      "disabled": false,
+      "search_location": "Ангарск",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": false,
+      "disabled": false,
+      "search_location": "Новосибирск",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": false,
+      "disabled": false,
+      "search_location": "Кемерово",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": false,
+      "disabled": false,
+      "search_location": "Томск",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": false,
+      "disabled": false,
+      "search_location": "Омск",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": false,
+      "disabled": false,
+      "search_location": "Челябинск",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": false,
+      "disabled": false,
+      "search_location": "Екатеринбург",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": false,
+      "disabled": false,
+      "search_location": "Пермь",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": false,
+      "disabled": false,
+      "search_location": "Казань",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": false,
+      "disabled": false,
+      "search_location": "Уфа",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": true,
+      "disabled": false,
+      "search_location": "Иркутск",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": true,
+      "disabled": false,
+      "search_location": "Красноярск",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": true,
+      "disabled": false,
+      "search_location": "Братск",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": true,
+      "disabled": false,
+      "search_location": "Ангарск",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": true,
+      "disabled": false,
+      "search_location": "Новосибирск",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": true,
+      "disabled": false,
+      "search_location": "Кемерово",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": true,
+      "disabled": false,
+      "search_location": "Томск",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": true,
+      "disabled": false,
+      "search_location": "Омск",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": true,
+      "disabled": false,
+      "search_location": "Челябинск",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": true,
+      "disabled": false,
+      "search_location": "Екатеринбург",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": true,
+      "disabled": false,
+      "search_location": "Пермь",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": true,
+      "disabled": false,
+      "search_location": "Казань",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": true,
+      "disabled": false,
+      "search_location": "Уфа",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": true,
+      "disabled": false,
+      "search_location": "Иркутск",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": true,
+      "disabled": false,
+      "search_location": "Красноярск",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": true,
+      "disabled": false,
+      "search_location": "Братск",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": true,
+      "disabled": false,
+      "search_location": "Ангарск",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": true,
+      "disabled": false,
+      "search_location": "Новосибирск",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": true,
+      "disabled": false,
+      "search_location": "Кемерово",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": true,
+      "disabled": false,
+      "search_location": "Томск",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": true,
+      "disabled": false,
+      "search_location": "Омск",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": true,
+      "disabled": false,
+      "search_location": "Челябинск",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": true,
+      "disabled": false,
+      "search_location": "Екатеринбург",
+      "api_limit_reached": false
+    },
+    {
+      "next": 2,
+      "done": true,
+      "disabled": false,
+      "search_location": "Пермь",
+      "api_limit_reached": false
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Казань"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Уфа"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Иркутск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Красноярск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Братск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Ангарск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Новосибирск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Кемерово"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Томск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Омск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Челябинск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Екатеринбург"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Пермь"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Казань"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Уфа"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Иркутск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Красноярск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Братск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Ангарск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Новосибирск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Кемерово"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Томск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Омск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Челябинск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Екатеринбург"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Пермь"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Казань"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Уфа"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Иркутск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Красноярск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Братск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Ангарск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Новосибирск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Кемерово"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Томск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Омск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Челябинск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Екатеринбург"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Пермь"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Казань"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Уфа"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Иркутск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Красноярск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Братск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Ангарск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Новосибирск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Кемерово"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Томск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Омск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Челябинск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Екатеринбург"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Пермь"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Казань"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Уфа"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Иркутск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Красноярск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Братск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Ангарск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Новосибирск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Кемерово"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Томск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Омск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Челябинск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Екатеринбург"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Пермь"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Казань"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Уфа"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Иркутск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Красноярск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Братск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Ангарск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Новосибирск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Кемерово"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Томск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Омск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Челябинск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Екатеринбург"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Пермь"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Казань"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Уфа"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Иркутск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Красноярск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Братск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Ангарск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Новосибирск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Кемерово"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Томск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Омск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Челябинск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Екатеринбург"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Пермь"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Казань"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Уфа"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Иркутск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Красноярск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Братск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Ангарск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Новосибирск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Кемерово"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Томск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Омск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Челябинск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Екатеринбург"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Пермь"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Казань"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Уфа"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Иркутск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Красноярск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Братск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Ангарск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Новосибирск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Кемерово"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Томск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Омск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Челябинск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Екатеринбург"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Пермь"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Казань"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Уфа"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Иркутск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Красноярск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Братск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Ангарск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Новосибирск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Кемерово"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Томск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Омск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Челябинск"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Екатеринбург"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Пермь"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Казань"
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "Уфа"
     }
   ],
   "request_times": [
@@ -966,9 +2291,9 @@
     1792439417.39991
   ],
   "consecutive_errors": 0,
-  "api_budget_reserved": 640,
-  "api_successful_requests": 285,
-  "api_charged_reported": 570,
+  "api_budget_reserved": 740,
+  "api_successful_requests": 335,
+  "api_charged_reported": 670,
   "search_mode": "personal_api_key",
   "last_query_error": {
     "query_index": 6,

@@ -1,0 +1,50 @@
+{
+  "query": "Innosilicon A10 | Иркутск",
+  "location": "Иркутск",
+  "page": 1,
+  "pagination": {
+    "page": 1,
+    "has_more": false
+  },
+  "ads": [
+    {
+      "ad_id": "8270821046",
+      "title": "Шумобокс для асика бу",
+      "url": "https://www.avito.ru/irkutsk/tovary_dlya_kompyutera/shumoboks_dlya_asika_bu_8270821046",
+      "price": 3200,
+      "price_text": "3 200 ₽",
+      "price_per_unit": null,
+      "price_is_from": false,
+      "published_at": "2026-09-24T12:50:49Z",
+      "description_snippet": "Шумобокс для whatsminer, либо innosilicon A10. Габариты 38х40х175см.\nШумоизоляция в два слоя.",
+      "params_summary": null,
+      "city": "Иркутск"
+    },
+    {
+      "ad_id": "2969126811",
+      "title": "Коса",
+      "url": "https://www.avito.ru/irkutsk/audio_i_video/kosa_2969126811",
+      "price": 280,
+      "price_text": "280 ₽",
+      "price_per_unit": null,
+      "price_is_from": false,
+      "published_at": "2026-10-14T15:51:35Z",
+      "description_snippet": "Коса для блока питания.\nBitmain s9,\nz11,\ninnosilicon a10,\nцена за полную косу 10 разъемов.\n300₽ при покупке от 5 кос.",
+      "params_summary": null,
+      "city": "Иркутск"
+    },
+    {
+      "ad_id": "7936344219",
+      "title": "Выкуп Асиков Старых, Выкуп Крупных Майнинг Ферм",
+      "url": "https://www.avito.ru/irkutsk/predlozheniya_uslug/vykup_asikov_staryh_vykup_krupnyh_mayning_ferm_7936344219",
+      "price": 1000,
+      "price_text": "от 1 000 ₽",
+      "price_per_unit": null,
+      "price_is_from": true,
+      "published_at": "2026-10-01T06:46:04Z",
+      "description_snippet": "Выкуп Асиков В Любом Состоянии / Покупаем Старый Неликвид.\nБерём рабочие / нерабочие / устаревшие/ на запчасти / после перегрева / с ошибками чипов.\n\nЗдравствуйте!\nЕсли вам нужно продать продать любые асики, старое неликвидное майнинговое оборудовани...",
+      "params_summary": null,
+      "city": "Иркутск"
+    }
+  ]
+}
