@@ -106,8 +106,8 @@
     "Antminer S19k Pro",
     "асики"
   ],
-  "cursor": 6,
-  "last_run": 1792447241.4017763,
+  "cursor": 7,
+  "last_run": 1792479772.9923654,
   "pages": [
     {
       "next": 31,
@@ -176,6 +176,12 @@
         "code": "INVALID_PARAM",
         "page": 2,
         "message": "Recovered saved INVALID_PARAM; original message was not recorded."
+      },
+      "blocked": {
+        "status": 200,
+        "code": "INVALID_PARAM",
+        "page": 2,
+        "message": "page 2 is past Avito's last page for this search"
       }
     },
     {
@@ -960,17 +966,17 @@
     1792439417.39991
   ],
   "consecutive_errors": 0,
-  "api_budget_reserved": 638,
+  "api_budget_reserved": 640,
   "api_successful_requests": 285,
   "api_charged_reported": 570,
   "search_mode": "personal_api_key",
   "last_query_error": {
-    "query_index": 101,
-    "query": "Antminer S19 Pro",
+    "query_index": 6,
+    "query": "Antminer T9+",
     "status": 200,
     "code": "INVALID_PARAM",
-    "page": 20,
-    "message": "page 20 is past Avito's last page for this search"
+    "page": 2,
+    "message": "page 2 is past Avito's last page for this search"
   },
   "recovery": "Known INVALID_PARAM isolated; other queries resumed."
 }

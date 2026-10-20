@@ -1,6 +1,6 @@
 # Подходящие объявления ASIC
 
-Обновлено: 20.10.2026 03:00 (Екатеринбург).
+Обновлено: 20.10.2026 12:02 (Екатеринбург).
 
 Innosilicon A10 / A10 Pro / A11 / A11 Pro: от 1 целого устройства. Antminer S19 всех модификаций, кроме XP и Hydro: от 15. Bitfury B8 / BT200: от 5. Остальные модели из списка: от 20 у одного продавца.
 
@@ -31,40 +31,12 @@ Innosilicon A10 / A10 Pro / A11 / A11 Pro: от 1 целого устройст�
 | от 1; остаток не указан | Красноярск | Innosilicon A11 | Карточка: 35 000 ₽; единица цены не подтверждена | Уточнить | Продажа A10/A11; точный остаток не указан | [Авито](https://www.avito.ru/krasnoyarsk/nastolnye_kompyutery/innosilicon_a11_mx_8326113572) |
 | 3 асика | Москва | Innosilicon A11 | Карточка: 98 000 ₽; единица цены не подтверждена | Б/у | 3 асика innosilicon a11 в отличном состоянии! | [Авито](https://www.avito.ru/moskva/oborudovanie_dlya_biznesa/asik_innosilicon_a11_asik_7850805970) |
 
-Завершены активные запросы: 73/102. Отключены: 3. Достигли предела 30 страниц: 0.
+Завершены активные запросы: 101/102. Отключены: 3. Достигли предела 30 страниц: 0.
 
 **Запросы с ошибкой: отложены, не считаются завершёнными. Остальные продолжаются.**
 
 | Запрос | Страница | Ошибка |
 |---|---|---|
-| Antminer T19 | 5 | INVALID\_PARAM: page 5 is past Avito's last page for this search |
-| Antminer S17 | 5 | INVALID\_PARAM: page 5 is past Avito's last page for this search |
-| Antminer S9 | 7 | INVALID\_PARAM: page 7 is past Avito's last page for this search |
-| Antminer T9+ | 2 | INVALID\_PARAM: Recovered saved INVALID\_PARAM; original message was not recorded. |
-| Whatsminer M31S | 5 | INVALID\_PARAM: page 5 is past Avito's last page for this search |
-| Whatsminer M20S | 5 | INVALID\_PARAM: page 5 is past Avito's last page for this search |
-| Whatsminer M21S | 5 | INVALID\_PARAM: page 5 is past Avito's last page for this search |
-| Innosilicon T2T | 3 | INVALID\_PARAM: page 3 is past Avito's last page for this search |
-| Innosilicon A10 Pro | 2 | INVALID\_PARAM: page 2 is past Avito's last page for this search |
-| Avalon 1066 | 6 | INVALID\_PARAM: page 6 is past Avito's last page for this search |
-| Avalon 921 | 2 | INVALID\_PARAM: page 2 is past Avito's last page for this search |
-| Avalon 841 | 2 | INVALID\_PARAM: page 2 is past Avito's last page for this search |
-| асики партия | 5 | INVALID\_PARAM: page 5 is past Avito's last page for this search |
-| асики оптом | 5 | INVALID\_PARAM: page 5 is past Avito's last page for this search |
-| асики на запчасти | 6 | INVALID\_PARAM: page 6 is past Avito's last page for this search |
-| майнеры неисправные | 15 | INVALID\_PARAM: page 15 is past Avito's last page for this search |
-| майнеры партия | 4 | INVALID\_PARAM: page 4 is past Avito's last page for this search |
-| Antminer S19 90 | 4 | INVALID\_PARAM: page 4 is past Avito's last page for this search |
-| Antminer S19 95 | 3 | INVALID\_PARAM: page 3 is past Avito's last page for this search |
-| Antminer S19 100 | 18 | INVALID\_PARAM: page 18 is past Avito's last page for this search |
-| Antminer S19 104 | 3 | INVALID\_PARAM: page 3 is past Avito's last page for this search |
-| Antminer S19 110 | 3 | INVALID\_PARAM: page 3 is past Avito's last page for this search |
-| Antminer S19 120 | 7 | INVALID\_PARAM: page 7 is past Avito's last page for this search |
-| Antminer L3+ | 5 | INVALID\_PARAM: page 5 is past Avito's last page for this search |
-| Innosilicon A10 | 2 | INVALID\_PARAM: page 2 is past Avito's last page for this search |
-| Innosilicon A11 | 2 | INVALID\_PARAM: page 2 is past Avito's last page for this search |
-| Antminer S19 Pro | 20 | INVALID\_PARAM: page 20 is past Avito's last page for this search |
-| Antminer S19j Pro | 10 | INVALID\_PARAM: page 10 is past Avito's last page for this search |
-| Antminer S19k Pro | 7 | INVALID\_PARAM: page 7 is past Avito's last page for this search |
+| Antminer T9+ | 2 | INVALID\_PARAM: page 2 is past Avito's last page for this search |
 
-Личный API-ключ: успешных запросов 285. Консервативный резерв расхода: 638/900 кредитов. Это счётчик workflow, не фактический баланс ReefAPI; ошибки тоже резервируются.
+Личный API-ключ: успешных запросов 285. Консервативный резерв расхода: 640/900 кредитов. Это счётчик workflow, не фактический баланс ReefAPI; ошибки тоже резервируются.
