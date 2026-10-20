@@ -106,7 +106,7 @@
     "Antminer S19k Pro",
     "асики"
   ],
-  "cursor": 0,
+  "cursor": 6,
   "last_run": 1792447241.4017763,
   "pages": [
     {
@@ -117,10 +117,11 @@
     },
     {
       "next": 5,
-      "done": false,
+      "done": true,
       "api_limit_reached": false,
       "disabled": false,
-      "blocked": {
+      "exhaustion_source": "api_last_page",
+      "end_of_pages": {
         "status": 200,
         "code": "INVALID_PARAM",
         "page": 5,
@@ -129,10 +130,11 @@
     },
     {
       "next": 5,
-      "done": false,
+      "done": true,
       "api_limit_reached": false,
       "disabled": false,
-      "blocked": {
+      "exhaustion_source": "api_last_page",
+      "end_of_pages": {
         "status": 200,
         "code": "INVALID_PARAM",
         "page": 5,
@@ -153,10 +155,11 @@
     },
     {
       "next": 7,
-      "done": false,
+      "done": true,
       "api_limit_reached": false,
       "disabled": false,
-      "blocked": {
+      "exhaustion_source": "api_last_page",
+      "end_of_pages": {
         "status": 200,
         "code": "INVALID_PARAM",
         "page": 7,
@@ -168,7 +171,7 @@
       "done": false,
       "api_limit_reached": false,
       "disabled": false,
-      "blocked": {
+      "previous_query_error": {
         "status": 200,
         "code": "INVALID_PARAM",
         "page": 2,
@@ -207,10 +210,11 @@
     },
     {
       "next": 5,
-      "done": false,
+      "done": true,
       "api_limit_reached": false,
       "disabled": false,
-      "blocked": {
+      "exhaustion_source": "api_last_page",
+      "end_of_pages": {
         "status": 200,
         "code": "INVALID_PARAM",
         "page": 5,
@@ -219,10 +223,11 @@
     },
     {
       "next": 5,
-      "done": false,
+      "done": true,
       "api_limit_reached": false,
       "disabled": false,
-      "blocked": {
+      "exhaustion_source": "api_last_page",
+      "end_of_pages": {
         "status": 200,
         "code": "INVALID_PARAM",
         "page": 5,
@@ -231,10 +236,11 @@
     },
     {
       "next": 5,
-      "done": false,
+      "done": true,
       "api_limit_reached": false,
       "disabled": false,
-      "blocked": {
+      "exhaustion_source": "api_last_page",
+      "end_of_pages": {
         "status": 200,
         "code": "INVALID_PARAM",
         "page": 5,
@@ -261,10 +267,11 @@
     },
     {
       "next": 3,
-      "done": false,
+      "done": true,
       "api_limit_reached": false,
       "disabled": false,
-      "blocked": {
+      "exhaustion_source": "api_last_page",
+      "end_of_pages": {
         "status": 200,
         "code": "INVALID_PARAM",
         "page": 3,
@@ -321,10 +328,11 @@
     },
     {
       "next": 2,
-      "done": false,
+      "done": true,
       "api_limit_reached": false,
       "disabled": false,
-      "blocked": {
+      "exhaustion_source": "api_last_page",
+      "end_of_pages": {
         "status": 200,
         "code": "INVALID_PARAM",
         "page": 2,
@@ -345,10 +353,11 @@
     },
     {
       "next": 6,
-      "done": false,
+      "done": true,
       "api_limit_reached": false,
       "disabled": false,
-      "blocked": {
+      "exhaustion_source": "api_last_page",
+      "end_of_pages": {
         "status": 200,
         "code": "INVALID_PARAM",
         "page": 6,
@@ -363,10 +372,11 @@
     },
     {
       "next": 2,
-      "done": false,
+      "done": true,
       "api_limit_reached": false,
       "disabled": false,
-      "blocked": {
+      "exhaustion_source": "api_last_page",
+      "end_of_pages": {
         "status": 200,
         "code": "INVALID_PARAM",
         "page": 2,
@@ -381,10 +391,11 @@
     },
     {
       "next": 2,
-      "done": false,
+      "done": true,
       "api_limit_reached": false,
       "disabled": false,
-      "blocked": {
+      "exhaustion_source": "api_last_page",
+      "end_of_pages": {
         "status": 200,
         "code": "INVALID_PARAM",
         "page": 2,
@@ -453,10 +464,11 @@
     },
     {
       "next": 5,
-      "done": false,
+      "done": true,
       "api_limit_reached": false,
       "disabled": false,
-      "blocked": {
+      "exhaustion_source": "api_last_page",
+      "end_of_pages": {
         "status": 200,
         "code": "INVALID_PARAM",
         "page": 5,
@@ -465,10 +477,11 @@
     },
     {
       "next": 5,
-      "done": false,
+      "done": true,
       "api_limit_reached": false,
       "disabled": false,
-      "blocked": {
+      "exhaustion_source": "api_last_page",
+      "end_of_pages": {
         "status": 200,
         "code": "INVALID_PARAM",
         "page": 5,
@@ -477,10 +490,11 @@
     },
     {
       "next": 6,
-      "done": false,
+      "done": true,
       "api_limit_reached": false,
       "disabled": false,
-      "blocked": {
+      "exhaustion_source": "api_last_page",
+      "end_of_pages": {
         "status": 200,
         "code": "INVALID_PARAM",
         "page": 6,
@@ -489,10 +503,11 @@
     },
     {
       "next": 15,
-      "done": false,
+      "done": true,
       "api_limit_reached": false,
       "disabled": false,
-      "blocked": {
+      "exhaustion_source": "api_last_page",
+      "end_of_pages": {
         "status": 200,
         "code": "INVALID_PARAM",
         "page": 15,
@@ -525,10 +540,11 @@
     },
     {
       "next": 4,
-      "done": false,
+      "done": true,
       "api_limit_reached": false,
       "disabled": false,
-      "blocked": {
+      "exhaustion_source": "api_last_page",
+      "end_of_pages": {
         "status": 200,
         "code": "INVALID_PARAM",
         "page": 4,
@@ -537,10 +553,11 @@
     },
     {
       "next": 4,
-      "done": false,
+      "done": true,
       "api_limit_reached": false,
       "disabled": false,
-      "blocked": {
+      "exhaustion_source": "api_last_page",
+      "end_of_pages": {
         "status": 200,
         "code": "INVALID_PARAM",
         "page": 4,
@@ -549,10 +566,11 @@
     },
     {
       "next": 3,
-      "done": false,
+      "done": true,
       "api_limit_reached": false,
       "disabled": false,
-      "blocked": {
+      "exhaustion_source": "api_last_page",
+      "end_of_pages": {
         "status": 200,
         "code": "INVALID_PARAM",
         "page": 3,
@@ -567,10 +585,11 @@
     },
     {
       "next": 18,
-      "done": false,
+      "done": true,
       "api_limit_reached": false,
       "disabled": false,
-      "blocked": {
+      "exhaustion_source": "api_last_page",
+      "end_of_pages": {
         "status": 200,
         "code": "INVALID_PARAM",
         "page": 18,
@@ -579,10 +598,11 @@
     },
     {
       "next": 3,
-      "done": false,
+      "done": true,
       "api_limit_reached": false,
       "disabled": false,
-      "blocked": {
+      "exhaustion_source": "api_last_page",
+      "end_of_pages": {
         "status": 200,
         "code": "INVALID_PARAM",
         "page": 3,
@@ -591,10 +611,11 @@
     },
     {
       "next": 3,
-      "done": false,
+      "done": true,
       "api_limit_reached": false,
       "disabled": false,
-      "blocked": {
+      "exhaustion_source": "api_last_page",
+      "end_of_pages": {
         "status": 200,
         "code": "INVALID_PARAM",
         "page": 3,
@@ -603,10 +624,11 @@
     },
     {
       "next": 7,
-      "done": false,
+      "done": true,
       "api_limit_reached": false,
       "disabled": false,
-      "blocked": {
+      "exhaustion_source": "api_last_page",
+      "end_of_pages": {
         "status": 200,
         "code": "INVALID_PARAM",
         "page": 7,
@@ -645,10 +667,11 @@
     },
     {
       "next": 5,
-      "done": false,
+      "done": true,
       "api_limit_reached": false,
       "disabled": false,
-      "blocked": {
+      "exhaustion_source": "api_last_page",
+      "end_of_pages": {
         "status": 200,
         "code": "INVALID_PARAM",
         "page": 5,
@@ -843,10 +866,11 @@
     },
     {
       "next": 2,
-      "done": false,
+      "done": true,
       "disabled": false,
       "api_limit_reached": false,
-      "blocked": {
+      "exhaustion_source": "api_last_page",
+      "end_of_pages": {
         "status": 200,
         "code": "INVALID_PARAM",
         "page": 2,
@@ -855,10 +879,11 @@
     },
     {
       "next": 2,
-      "done": false,
+      "done": true,
       "disabled": false,
       "api_limit_reached": false,
-      "blocked": {
+      "exhaustion_source": "api_last_page",
+      "end_of_pages": {
         "status": 200,
         "code": "INVALID_PARAM",
         "page": 2,
@@ -873,10 +898,11 @@
     },
     {
       "next": 20,
-      "done": false,
+      "done": true,
       "disabled": false,
       "api_limit_reached": false,
-      "blocked": {
+      "exhaustion_source": "api_last_page",
+      "end_of_pages": {
         "status": 200,
         "code": "INVALID_PARAM",
         "page": 20,
@@ -885,10 +911,11 @@
     },
     {
       "next": 10,
-      "done": false,
+      "done": true,
       "disabled": false,
       "api_limit_reached": false,
-      "blocked": {
+      "exhaustion_source": "api_last_page",
+      "end_of_pages": {
         "status": 200,
         "code": "INVALID_PARAM",
         "page": 10,
@@ -897,10 +924,11 @@
     },
     {
       "next": 7,
-      "done": false,
+      "done": true,
       "disabled": false,
       "api_limit_reached": false,
-      "blocked": {
+      "exhaustion_source": "api_last_page",
+      "end_of_pages": {
         "status": 200,
         "code": "INVALID_PARAM",
         "page": 7,
