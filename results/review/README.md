@@ -1322,3 +1322,4 @@
 | Санкт-Петербург | asic-майнер innosilicon t2tz 30th | Нет однозначного совпадения модели, хешрейта и количества по сохранённому описанию | [Авито](https://www.avito.ru/sankt-peterburg/oborudovanie_dlya_biznesa/asic-mayner_innosilicon_t2tz_30th_7554280104) |
 | Иркутск | вилка штекер разьем s19 | Нет однозначного совпадения модели, хешрейта и количества по сохранённому описанию | [Авито](https://www.avito.ru/irkutsk/audio_i_video/vilka_shteker_razem_s19_2294433387) |
 | Омск | градирня 15квт на 3 асик s21, m63, m73 драйкуллер | Нет однозначного совпадения модели, хешрейта и количества по сохранённому описанию | [Авито](https://www.avito.ru/omsk/oborudovanie_dlya_biznesa/gradirnya_15kvt_na_3_asik_s21_m63_m73_draykuller_8112885441) |
+| Екатеринбург | айсик s17,s11, avalon | Нет однозначного совпадения модели, хешрейта и количества по сохранённому описанию | [Авито](https://www.avito.ru/ekaterinburg/tovary_dlya_kompyutera/aysik_s17s11_avalon_3771842876) |

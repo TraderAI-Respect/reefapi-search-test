@@ -1,0 +1,50 @@
+{
+  "query": "Ebit | Кемерово",
+  "location": "Кемерово",
+  "page": 1,
+  "pagination": {
+    "page": 1,
+    "has_more": false
+  },
+  "ads": [
+    {
+      "ad_id": "7936419135",
+      "title": "Выкуп Асиков Старых, Выкуп Крупных Майнинг Ферм",
+      "url": "https://www.avito.ru/kemerovo/predlozheniya_uslug/vykup_asikov_staryh_vykup_krupnyh_mayning_ferm_7936419135",
+      "price": 1000,
+      "price_text": "от 1 000 ₽",
+      "price_per_unit": null,
+      "price_is_from": true,
+      "published_at": "2026-10-08T07:27:50Z",
+      "description_snippet": "Выкуп Асиков В Любом Состоянии / Покупаем Старый Неликвид.\nБерём рабочие / нерабочие / устаревшие/ на запчасти / после перегрева / с ошибками чипов.\n\nЗдравствуйте!\nЕсли вам нужно продать любые асики, старое неликвидное майнинг оборудование — напишите...",
+      "params_summary": null,
+      "city": "Кемерово"
+    },
+    {
+      "ad_id": "8326537995",
+      "title": "Финансовый аналитик самозанятый (ebitda, рентаб.)",
+      "url": "https://www.avito.ru/kemerovo/predlozheniya_uslug/finansovyy_analitik_samozanyatyy_ebitda_rentab._8326537995",
+      "price": 10000,
+      "price_text": "10 000 ₽",
+      "price_per_unit": null,
+      "price_is_from": false,
+      "published_at": "2026-09-28T11:05:35Z",
+      "description_snippet": "Помогу увидеть реальную картину вашего бизнеса в цифрах. Провожу финансовый анализ по данным вашей отчетности (Рсбу или управленческой) и превращаю их в инструмент для принятия решений.\n\nЧто входит в анализ:\nВыручка и сезонность.\n— Мониторинг выручки...",
+      "params_summary": null,
+      "city": "Кемерово"
+    },
+    {
+      "ad_id": "8100985843",
+      "title": "Автобизнес (таксопарк) в южном федеральном округе",
+      "url": "https://www.avito.ru/kemerovo/gotoviy_biznes/avtobiznes_taksopark_v_yuzhnom_federalnom_okruge_8100985843",
+      "price": 500000000,
+      "price_text": "500 000 000 ₽",
+      "price_per_unit": null,
+      "price_is_from": false,
+      "published_at": "2026-10-13T11:55:36Z",
+      "description_snippet": "В прoдaжe стaбильный и прибыльный гoтoвый aвтoбизнeс пo aрeндe (тaксoпaрк) и рeмoнту aвтoмoбилeй в Юфo, рaбoтaющий бoлee 7 лeт.\n\nБыстрaя oкупaeмoсть — дo 35 мeсяцeв, бeз дoпoлнитeльных влoжeний.\n\nБeз кoмиссии для пoкупaтeля.\n\nКoмaндa сфoрмирoвaнa, пр...",
+      "params_summary": null,
+      "city": "Кемерово"
+    }
+  ]
+}

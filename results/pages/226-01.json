@@ -1,0 +1,76 @@
+{
+  "query": "Ebit | Новосибирск",
+  "location": "Новосибирск",
+  "page": 1,
+  "pagination": {
+    "page": 1,
+    "has_more": false
+  },
+  "ads": [
+    {
+      "ad_id": "2093401454",
+      "title": "Ремонт asic майнеров (от 1 дня)",
+      "url": "https://www.avito.ru/novosibirsk/predlozheniya_uslug/remont_asic_maynerov_ot_1_dnya_2093401454",
+      "price": null,
+      "price_text": "Цена договорная",
+      "price_per_unit": null,
+      "price_is_from": false,
+      "published_at": "2026-10-15T10:35:09Z",
+      "description_snippet": "Ремонт Antminer, Innosilicon, Whatsminer, Avalon, Ebit, Iceriver.\n\nОпыт работы 8 лет. Профессионально оборудование. Качественные комплектующие.\n\nБесплатная диагностика оборудования.\n\nСроки ремонта от 1 дня.\n\nГарантия на выполненную работу.\n\nРемонт хэ...",
+      "params_summary": null,
+      "city": "Новосибирск"
+    },
+    {
+      "ad_id": "8395070997",
+      "title": "Выкуп асиков и майнинг-ферм по всей России",
+      "url": "https://www.avito.ru/novosibirsk/predlozheniya_uslug/vykup_asikov_i_mayning-ferm_po_vsey_rossii_8395070997",
+      "price": 888,
+      "price_text": "от 888 ₽",
+      "price_per_unit": null,
+      "price_is_from": true,
+      "published_at": "2026-09-21T06:25:21Z",
+      "description_snippet": "Старые И Нерабочие Асики — Выкуп С Вывозом.\n\nАсики лежат без дела, не запускаются или стали невыгодны в работе? Рассмотрим их к покупке. Выкупаем Asic-майнеры в любом состоянии по всей России.\n\nРаботоспособность не обязательна. Предлагайте устаревшие...",
+      "params_summary": null,
+      "city": "Новосибирск"
+    },
+    {
+      "ad_id": "7935978576",
+      "title": "Выкуп Асиков Старых, Выкуп Крупных Майнинг Ферм",
+      "url": "https://www.avito.ru/novosibirsk/predlozheniya_uslug/vykup_asikov_staryh_vykup_krupnyh_mayning_ferm_7935978576",
+      "price": 1000,
+      "price_text": "от 1 000 ₽",
+      "price_per_unit": null,
+      "price_is_from": true,
+      "published_at": "2026-10-01T06:51:31Z",
+      "description_snippet": "Выкуп Асиков В Любом Состоянии / Покупаем Старый Неликвид.\nБерём рабочие / нерабочие / устаревшие/ на запчасти / после перегрева / с ошибками чипов.\n\nЗдравствуйте!\nЕсли вам нужно продать продать любые асики, старое неликвидное майнинговое оборудовани...",
+      "params_summary": null,
+      "city": "Новосибирск"
+    },
+    {
+      "ad_id": "7964305180",
+      "title": "Готовый автобизнес в юфо",
+      "url": "https://www.avito.ru/novosibirsk/gotoviy_biznes/gotovyy_avtobiznes_v_yufo_7964305180",
+      "price": 500000000,
+      "price_text": "500 000 000 ₽",
+      "price_per_unit": null,
+      "price_is_from": false,
+      "published_at": "2026-10-09T17:09:02Z",
+      "description_snippet": "В продаже стабильный и прибыльный готовый автобизнес по аренде и ремонту автомобилей (таксопарк) в Юфо, работающий более 7 лет.\n\nБыстрая окупаемость — до 35 месяцев, без дополнительных вложений.\n\nБез комиссии для покупателя.\n\nНа Чём Зарабатыват Бизне...",
+      "params_summary": null,
+      "city": "Новосибирск"
+    },
+    {
+      "ad_id": "8101789209",
+      "title": "Автобизнес (таксопарк) в южном федеральном округе",
+      "url": "https://www.avito.ru/novosibirsk/gotoviy_biznes/avtobiznes_taksopark_v_yuzhnom_federalnom_okruge_8101789209",
+      "price": 500000000,
+      "price_text": "500 000 000 ₽",
+      "price_per_unit": null,
+      "price_is_from": false,
+      "published_at": "2026-10-11T10:18:38Z",
+      "description_snippet": "В прoдaжe стaбильный и прибыльный гoтoвый aвтoбизнeс пo aрeндe (тaксoпaрк) и рeмoнту aвтoмoбилeй в Юфo, рaбoтaющий бoлee 7 лeт.\n\nБыстрaя oкупaeмoсть — дo 35 мeсяцeв, бeз дoпoлнитeльных влoжeний.\n\nБeз кoмиссии для пoкупaтeля.\n\nКoмaндa сфoрмирoвaнa, пр...",
+      "params_summary": null,
+      "city": "Новосибирск"
+    }
+  ]
+}

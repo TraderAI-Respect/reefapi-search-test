@@ -1,0 +1,50 @@
+{
+  "query": "Ebit | Томск",
+  "location": "Томск",
+  "page": 1,
+  "pagination": {
+    "page": 1,
+    "has_more": false
+  },
+  "ads": [
+    {
+      "ad_id": "8063460621",
+      "title": "Шумобокс на 2 asic Antminer/Whatsminer",
+      "url": "https://www.avito.ru/tomsk/tovary_dlya_kompyutera/shumoboks_na_2_asic_antminerwhatsminer_8063460621",
+      "price": 9000,
+      "price_text": "9 000 ₽",
+      "price_per_unit": null,
+      "price_is_from": false,
+      "published_at": "2026-09-23T11:56:28Z",
+      "description_snippet": "Шумобокс двухместный для Asic / Асик майнера / Шумоизоляционный короб для Antminer, Whatsminer.\n\nДо 90% снижения шума — с 85 дБ до 40–45 дБ.\n\nБез перегрева.\n\nПодходит для всех моделей Asic.\n\nЕсли вам нужен шумобокс для асика, чтобы разместить майнер ...",
+      "params_summary": null,
+      "city": "Томск"
+    },
+    {
+      "ad_id": "7936618672",
+      "title": "Выкуп Асиков Старых, Выкуп Крупных Майнинг Ферм",
+      "url": "https://www.avito.ru/tomsk/predlozheniya_uslug/vykup_asikov_staryh_vykup_krupnyh_mayning_ferm_7936618672",
+      "price": 1000,
+      "price_text": "от 1 000 ₽",
+      "price_per_unit": null,
+      "price_is_from": true,
+      "published_at": "2026-10-08T07:18:49Z",
+      "description_snippet": "Выкуп Асиков В Любом Состоянии / Покупаем Старый Неликвид.\nБерём рабочие / нерабочие / устаревшие/ на запчасти / после перегрева / с ошибками чипов.\n\nЗдравствуйте!\nЕсли вам нужно продать продать любые асики, старое неликвидное майнинговое оборудовани...",
+      "params_summary": null,
+      "city": "Томск"
+    },
+    {
+      "ad_id": "8101044038",
+      "title": "Автобизнес (таксопарк) в южном федеральном округе",
+      "url": "https://www.avito.ru/tomsk/gotoviy_biznes/avtobiznes_taksopark_v_yuzhnom_federalnom_okruge_8101044038",
+      "price": 500000000,
+      "price_text": "500 000 000 ₽",
+      "price_per_unit": null,
+      "price_is_from": false,
+      "published_at": "2026-10-11T10:17:13Z",
+      "description_snippet": "В прoдaжe стaбильный и прибыльный гoтoвый aвтoбизнeс пo aрeндe (тaксoпaрк) и рeмoнту aвтoмoбилeй в Юфo, рaбoтaющий бoлee 7 лeт.\n\nБыстрaя oкупaeмoсть — дo 35 мeсяцeв, бeз дoпoлнитeльных влoжeний.\n\nБeз кoмиссии для пoкупaтeля.\n\nКoмaндa сфoрмирoвaнa, пр...",
+      "params_summary": null,
+      "city": "Томск"
+    }
+  ]
+}

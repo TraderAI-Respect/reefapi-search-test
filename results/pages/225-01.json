@@ -1,0 +1,76 @@
+{
+  "query": "Ebit | Ангарск",
+  "location": "Ангарск",
+  "page": 1,
+  "pagination": {
+    "page": 1,
+    "has_more": false
+  },
+  "ads": [
+    {
+      "ad_id": "3568148335",
+      "title": "Шлейф 18 pin, 20 pin для асиков и программаторов",
+      "url": "https://www.avito.ru/angarsk/tovary_dlya_kompyutera/shleyf_18_pin_20_pin_dlya_asikov_i_programmatorov_3568148335",
+      "price": 50,
+      "price_text": "50 ₽",
+      "price_per_unit": null,
+      "price_is_from": false,
+      "published_at": "2026-09-24T02:23:15Z",
+      "description_snippet": "Шлейфы 18pin~17 см от antminer. — 50р. Много.\nШлейф 20pin~12 см от ebit. 4 шт. 100р. (Также берут для программаторов).",
+      "params_summary": null,
+      "city": "Ангарск"
+    },
+    {
+      "ad_id": "8170491533",
+      "title": "Утилизация asic",
+      "url": "https://www.avito.ru/angarsk/predlozheniya_uslug/utilizatsiya_asic_8170491533",
+      "price": 250,
+      "price_text": "от 250 ₽",
+      "price_per_unit": null,
+      "price_is_from": true,
+      "published_at": "2026-09-26T13:30:01Z",
+      "description_snippet": "Выкуп Аcикoв В Любом Соcтoянии / Покупаеm Cтаpый Heлиkbид ; T9, S9, z9, t2t, ebit, м21, и т. Д. Старые авалоны, и прочие неактуальные майнеры. Не Иркутск энерго!",
+      "params_summary": null,
+      "city": "Ангарск"
+    },
+    {
+      "ad_id": "8338694986",
+      "title": "Скупка Асиков Майнеров Antminer Whatsminer Avalon",
+      "url": "https://www.avito.ru/angarsk/predlozheniya_uslug/skupka_asikov_maynerov_antminer_whatsminer_avalon_8338694986",
+      "price": null,
+      "price_text": "Цена договорная",
+      "price_per_unit": null,
+      "price_is_from": false,
+      "published_at": "2026-10-12T17:39:08Z",
+      "description_snippet": "Выкуп Асиков И Майнеров В Любом Состоянии От 30 Штук.\n\nВыкупаем Асик-майнеры по всей России — рабочие, неисправные, после ремонта, с ошибками, некомплектные и устаревшие модели.\n\nОсобенно интересуют крупные партии оборудования. Выкупаем майнинг-обору...",
+      "params_summary": null,
+      "city": "Ангарск"
+    },
+    {
+      "ad_id": "7936404456",
+      "title": "Выкуп Асиков Старых, Выкуп Крупных Майнинг Ферм",
+      "url": "https://www.avito.ru/angarsk/predlozheniya_uslug/vykup_asikov_staryh_vykup_krupnyh_mayning_ferm_7936404456",
+      "price": 1000,
+      "price_text": "от 1 000 ₽",
+      "price_per_unit": null,
+      "price_is_from": true,
+      "published_at": "2026-10-08T07:11:25Z",
+      "description_snippet": "Выкуп Асиков В Любом Состоянии / Покупаем Старый Неликвид.\nБерём рабочие / нерабочие / устаревшие/ на запчасти / после перегрева / с ошибками чипов.\n\nЗдравствуйте!\nЕсли вам нужно продать продать любые асики, старое неликвидное майнинговое оборудовани...",
+      "params_summary": null,
+      "city": "Ангарск"
+    },
+    {
+      "ad_id": "4623593139",
+      "title": "Выкуп старого майнинг оборудования",
+      "url": "https://www.avito.ru/angarsk/predlozheniya_uslug/vykup_starogo_mayning_oborudovaniya_4623593139",
+      "price": 1,
+      "price_text": "1 ₽",
+      "price_per_unit": null,
+      "price_is_from": false,
+      "published_at": "2026-10-09T11:10:48Z",
+      "description_snippet": "Выкуплю:\nT9, S9, z9, t2t, ebit, м21, s19, старые авалоны, и прочие неактуальные майнеры.\nЛюбой Объем.\nМоментальный Выкуп.\nСостояние И Работоспособность Не Важны.\nЗаберем Сами.\nВозможен обмен на s19, m30, m50.\nИркутск/Ангарск/Усолье.\nЦены уточняйте в ...",
+      "params_summary": null,
+      "city": "Ангарск"
+    }
+  ]
+}

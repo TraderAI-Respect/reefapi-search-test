@@ -1,0 +1,24 @@
+{
+  "query": "Bitfury | Томск",
+  "location": "Томск",
+  "page": 1,
+  "pagination": {
+    "page": 1,
+    "has_more": false
+  },
+  "ads": [
+    {
+      "ad_id": "7936618672",
+      "title": "Выкуп Асиков Старых, Выкуп Крупных Майнинг Ферм",
+      "url": "https://www.avito.ru/tomsk/predlozheniya_uslug/vykup_asikov_staryh_vykup_krupnyh_mayning_ferm_7936618672",
+      "price": 1000,
+      "price_text": "от 1 000 ₽",
+      "price_per_unit": null,
+      "price_is_from": true,
+      "published_at": "2026-10-08T07:18:49Z",
+      "description_snippet": "Выкуп Асиков В Любом Состоянии / Покупаем Старый Неликвид.\nБерём рабочие / нерабочие / устаревшие/ на запчасти / после перегрева / с ошибками чипов.\n\nЗдравствуйте!\nЕсли вам нужно продать продать любые асики, старое неликвидное майнинговое оборудовани...",
+      "params_summary": null,
+      "city": "Томск"
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "query": "Ebit | Красноярск",
+  "location": "Красноярск",
+  "page": 1,
+  "pagination": {
+    "page": 1,
+    "has_more": false
+  },
+  "ads": [
+    {
+      "ad_id": "2518945229",
+      "title": "Шумобокс для любых асиков / Шумбокс / В наличии",
+      "url": "https://www.avito.ru/krasnoyarsk/oborudovanie_dlya_biznesa/shumoboks_dlya_lyubyh_asikov_shumboks_v_nalichii_2518945229",
+      "price": 7000,
+      "price_text": "7 000 ₽",
+      "price_per_unit": null,
+      "price_is_from": false,
+      "published_at": "2026-10-15T01:40:02Z",
+      "description_snippet": "В наличии в Красноярске возможна доставка до адреса.\n\nТакже возможна отправка на межгород.\n\nПодходит под любые асики 1 или 2 шт.\n\nОтделка негорючими материалами.\n\n- Корпус из Осп 12мм.\n- Мин. Толщина шумоизоляции 50мм.\n- Вентиляция под гофру для отво...",
+      "params_summary": "Новый",
+      "city": "Красноярск"
+    },
+    {
+      "ad_id": "2411746597",
+      "title": "Ремонт Асиков Майнеров. Z15",
+      "url": "https://www.avito.ru/krasnoyarsk/predlozheniya_uslug/remont_asikov_maynerov._z15_2411746597",
+      "price": 500,
+      "price_text": "от 500 ₽",
+      "price_per_unit": null,
+      "price_is_from": true,
+      "published_at": "2026-10-13T03:40:12Z",
+      "description_snippet": "Ремонт Antminer z15, Antminer z15e.\nУ нас большой опыт работы с майнинговым оборудованием и делаем ремонт в сверх короткие сроки.\nМы не учимся на вашем оборудовании, а именно ремонтируем, поэтому у нас вы не будете ждать ремонта по два месяца.\nРемонт...",
+      "params_summary": null,
+      "city": "Красноярск"
+    },
+    {
+      "ad_id": "7936864060",
+      "title": "Выкуп Асиков Старых, Выкуп Крупных Майнинг Ферм",
+      "url": "https://www.avito.ru/krasnoyarsk/predlozheniya_uslug/vykup_asikov_staryh_vykup_krupnyh_mayning_ferm_7936864060",
+      "price": 1000,
+      "price_text": "от 1 000 ₽",
+      "price_per_unit": null,
+      "price_is_from": true,
+      "published_at": "2026-10-08T07:22:03Z",
+      "description_snippet": "Выкуп Асиков В Любом Состоянии / Покупаем Старый Неликвид.\nБерём рабочие / нерабочие / устаревшие/ на запчасти / после перегрева / с ошибками чипов.\n\nЗдравствуйте!\nЕсли вам нужно продать продать любые асики, старое неликвидное майнинговое оборудовани...",
+      "params_summary": null,
+      "city": "Красноярск"
+    },
+    {
+      "ad_id": "7963978413",
+      "title": "Готовый автобизнес в юфо",
+      "url": "https://www.avito.ru/krasnoyarsk/gotoviy_biznes/gotovyy_avtobiznes_v_yufo_7963978413",
+      "price": 500000000,
+      "price_text": "500 000 000 ₽",
+      "price_per_unit": null,
+      "price_is_from": false,
+      "published_at": "2026-10-09T17:12:56Z",
+      "description_snippet": "В продаже стабильный и прибыльный готовый автобизнес по аренде и ремонту автомобилей (таксопарк) в Юфо, работающий более 7 лет.\n\nБыстрая окупаемость — до 35 месяцев, без дополнительных вложений.\n\nБез комиссии для покупателя.\n\nНа Чём Зарабатыват Бизне...",
+      "params_summary": null,
+      "city": "Красноярск"
+    },
+    {
+      "ad_id": "7600650126",
+      "title": "Генеральный директор (CEO) / Антикризисный (CEO)",
+      "url": "https://www.avito.ru/krasnoyarsk/rezume/generalnyy_direktor_ceo_antikrizisnyy_ceo_7600650126",
+      "price": 250000,
+      "price_text": "250 000 ₽",
+      "price_per_unit": null,
+      "price_is_from": false,
+      "published_at": "2026-09-24T00:15:38Z",
+      "description_snippet": "Ceo с 30-летним опытом управления компаниями в финансах, девелопменте, производстве и автобизнесе. Вывожу активы из убытков: обеспечил вывод компании из убытков (долг 2,5 млрд ₽) в операционную прибыль без банкротства, сокращал расходы до 40%, повыша...",
+      "params_summary": null,
+      "city": "Красноярск"
+    }
+  ]
+}
