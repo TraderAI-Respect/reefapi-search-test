@@ -110,6 +110,13 @@ jobs:
               "Antminer S19k Pro",
               "асики",
           ]
+          CITIES = ["Иркутск","Красноярск","Братск","Ангарск","Новосибирск","Кемерово","Томск","Омск","Челябинск","Екатеринбург","Пермь","Казань","Уфа"]
+          CITY_QUERIES = ["Antminer","Whatsminer","Innosilicon A10","Innosilicon A10 Pro","Innosilicon A11","Innosilicon A11 Pro","Innosilicon","Avalon","Bitfury","Ebit","Hummer Miner","Aiden Miner","Aladdin Miner","Cheetah Miner"]
+          # Append-only labels keep every saved national query/page index unchanged.
+          CITY_TASKS = {query+' | '+city:{'query':query,'location':city}
+                        for query in CITY_QUERIES for city in CITIES}
+          QUERIES += list(CITY_TASKS)
+          
           DISABLED_QUERIES = {'асики 20 штук','асики 50 штук','асики 100 штук'}
           BUDGET = 900
           COST = 2
@@ -135,6 +142,14 @@ jobs:
               # Keep query indices, page positions, completion flags and credit counters intact.
               for query, entry in zip(state['queries'], state['pages']):
                   entry['disabled'] = query in DISABLED_QUERIES
+                  if query in CITY_TASKS:
+                      entry['search_location'] = CITY_TASKS[query]['location']
+                  blocked = entry.get('blocked') or {}
+                  if is_last_page(blocked.get('code'),blocked.get('message',''),entry['next']):
+                      entry['done'] = True
+                      entry['end_of_pages'] = blocked
+                      entry['exhaustion_source'] = 'api_last_page'
+                      entry.pop('blocked',None)
               # Recover this query-level pause only; never clear auth/budget pauses.
               error = state.get('last_error') or {}
               if state.get('paused') and error.get('code') == 'INVALID_PARAM':
@@ -146,8 +161,21 @@ jobs:
                       state['recovery'] = 'Known INVALID_PARAM isolated; other queries resumed.'
               return state
           
+          def is_last_page(code, message, page):
+              match = re.fullmatch(r"page (\d+) is past Avito's last page for this search", str(message).strip())
+              return code == 'INVALID_PARAM' and bool(match) and int(match.group(1)) == page
+          
           def block_query(state, index, status, code, message):
               entry = state['pages'][index]
+              if is_last_page(code,message,entry['next']):
+                  entry['done'] = True
+                  entry['end_of_pages'] = {'code':code,'message':message,'page':entry['next']}
+                  entry['exhaustion_source'] = 'api_last_page'
+                  entry.pop('blocked',None)
+                  state['cursor'] = (index+1) % len(state['queries'])
+                  state['consecutive_errors'] = 0
+                  state.pop('last_error',None)
+                  return
               entry['blocked'] = {'status':status,'code':code,'page':entry['next'],
                                   'message':str(message)[:400]}
               state['last_query_error'] = {'query_index':index,'query':state['queries'][index],
@@ -171,8 +199,8 @@ jobs:
                   raise RuntimeError('Local credit budget exhausted.')
               state['api_budget_reserved'] = state.get('api_budget_reserved', 0) + COST
           
-          def make_request(key, query, page):
-              body = {'query':query, 'location':'all', 'page':page, 'sort':'relevance',
+          def make_request(key, query, page, location='all'):
+              body = {'query':query, 'location':location, 'page':page, 'sort':'relevance',
                       'category_detection':False, 'include_sponsored':True,
                       'include_fallback_results':False, 'include_pii':False}
               return urllib.request.Request('https://api.reefapi.com/avito/v1/search',
@@ -268,6 +296,8 @@ jobs:
                          f'Paused: {bool(state.get("paused"))}\n')
               if state.get('last_error'):
                   message += 'Last error: ' + json.dumps(state['last_error'],ensure_ascii=False)+'\n'
+              city_entries = [entry for entry in state['pages'] if entry.get('search_location')]
+              message += f'City queries completed: {sum(bool(x.get("done")) for x in city_entries)}/{len(city_entries)}\n'
               print(message, flush=True)
               with open(os.environ['GITHUB_STEP_SUMMARY'],'a',encoding='utf-8') as stream:
                   stream.write('\n```text\n'+message+'```\n')
@@ -301,6 +331,7 @@ jobs:
                   active = active_indices(state)
                   index = next((i for i in active if i>=state['cursor']),active[0])
                   query, number = state['queries'][index], state['pages'][index]['next']
+                  task = CITY_TASKS.get(query, {'query':query,'location':'all'})
                   if not 1 <= number <= MAX_PAGE:
                       raise RuntimeError('Invalid page in checkpoint.')
                   reserve(state)
@@ -309,7 +340,7 @@ jobs:
                   try:
                       status, headers, payload = 200, {}, None
                       try:
-                          with opener.open(make_request(key,query,number),timeout=90) as response:
+                          with opener.open(make_request(key,task['query'],number,location=task['location']),timeout=90) as response:
                               status = response.status
                               headers = {k.lower():v for k,v in response.headers.items()}
                               payload = json.load(response)
@@ -329,7 +360,8 @@ jobs:
                               message = re.sub(r'ak_live_[A-Za-z0-9_-]+','[REDACTED]',message)
                               message = re.sub(r'https?://\S+','[URL REDACTED]',message)
                               block_query(state,index,status,code,message)
-                              print(f'Query {index}, page {number} deferred: INVALID_PARAM. Continuing other queries.',flush=True)
+                              label = 'last page reached' if state['pages'][index].get('done') else 'deferred: INVALID_PARAM'
+                              print(f'Query {index}, page {number}: {label}. Continuing other queries.',flush=True)
                           else:
                               failure(state,status,code,time.time(),headers)
                               failed = True
@@ -349,7 +381,7 @@ jobs:
                               ads.append(item)
                           pagination = {k:data[k] for k in ['page','has_more','has_next','total_pages','total_results','pagination'] if k in data}
                           write_json(Path(f'results/pages/{index:03d}-{number:02d}.json'),
-                                     {'query':query,'page':number,'pagination':pagination,'ads':ads})
+                                     {'query':query,'location':task['location'],'page':number,'pagination':pagination,'ads':ads})
                           state = next_state
                           print(f'Saved query {index}, page {number}: {len(ads)} listings.',flush=True)
                   except Exception:
@@ -685,6 +717,22 @@ jobs:
                           text.append('| ' + ' | '.join(cell(v) for v in [
                               state['queries'][index],error['page'],
                               str(error['code'])+': '+str(error.get('message',''))]) + ' |')
+                  cities = {}
+                  for query,entry in zip(state.get('queries',[]),entries):
+                      city = entry.get('search_location')
+                      if city:
+                          count = cities.setdefault(city,{'total':0,'done':0,'blocked':0})
+                          count['total'] += 1
+                          count['done'] += bool(entry.get('done'))
+                          count['blocked'] += bool(entry.get('blocked'))
+                  if cities:
+                      text += ['', '## Поиск по городам', '',
+                               'Это дополнительный проход. Общий прогресс по России сохранён. '
+                               'При исчерпании локального бюджета оставшиеся города не считаются проверенными.', '',
+                               '| Город поиска | Завершено запросов | Всего | Требуют проверки |',
+                               '|---|---|---|---|']
+                      for city, count in cities.items():
+                          text.append(f"| {cell(city)} | {count['done']} | {count['total']} | {count['blocked']} |")
                   if state.get('search_mode') == 'personal_api_key':
                       reserved = state.get('api_budget_reserved', 0)
                       succeeded = state.get('api_successful_requests', 0)
