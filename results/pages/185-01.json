@@ -1,0 +1,102 @@
+{
+  "query": "Innosilicon | Братск",
+  "location": "Братск",
+  "page": 1,
+  "pagination": {
+    "page": 1,
+    "has_more": false
+  },
+  "ads": [
+    {
+      "ad_id": "4054176130",
+      "title": "Обманка вентилятора асика Antminer, Innosilicon",
+      "url": "https://www.avito.ru/moskva/tovary_dlya_kompyutera/obmanka_ventilyatora_asika_antminer_innosilicon_4054176130",
+      "price": 399,
+      "price_text": "399 ₽",
+      "price_per_unit": null,
+      "price_is_from": false,
+      "published_at": "2026-09-21T16:20:56Z",
+      "description_snippet": "Данная обманка (эмулятор) создана для возможности работы без вентиляторов в жидкостном охлаждении (иммерсионка).\n\nРазъем обманки: 4 pin плоский.\n\nСовместимость:\n\n- Antminer (S19, L7, S17, S17+, S17e, S9, T9+, L3+, Z9), Innosilicon T2T.\n\nУстройство от...",
+      "params_summary": null,
+      "city": "Москва"
+    },
+    {
+      "ad_id": "8098283980",
+      "title": "Асики для майнинга бу",
+      "url": "https://www.avito.ru/bratsk/oborudovanie_dlya_biznesa/asiki_dlya_mayninga_bu_8098283980",
+      "price": 1000,
+      "price_text": "1 000 ₽",
+      "price_per_unit": null,
+      "price_is_from": false,
+      "published_at": "2026-09-30T10:00:49Z",
+      "description_snippet": "Инносиликон т2тz.",
+      "params_summary": "Б/у",
+      "city": "Братск"
+    },
+    {
+      "ad_id": "4054024568",
+      "title": "Обманка вентилятора асика Whatsminer, Innosilicon",
+      "url": "https://www.avito.ru/moskva/tovary_dlya_kompyutera/obmanka_ventilyatora_asika_whatsminer_innosilicon_4054024568",
+      "price": 349,
+      "price_text": "349 ₽",
+      "price_per_unit": null,
+      "price_is_from": false,
+      "published_at": "2026-09-21T16:20:04Z",
+      "description_snippet": "Данная обманка (эмулятор) создана для возможности работы без вентиляторов в жидкостном охлаждении (иммерсионка).\n\nРазъем обманки: 6 pin плоский.\n\nСовместимость:\n\n- Whatsminer, Innosilicon c соответствующими разъемами.\n\nУстройство отключает ошибку опр...",
+      "params_summary": null,
+      "city": "Москва"
+    },
+    {
+      "ad_id": "4054228580",
+      "title": "Вентилятор Delta PFC1412HE 140 мм - 9.0A",
+      "url": "https://www.avito.ru/moskva/tovary_dlya_kompyutera/ventilyator_delta_pfc1412he_140_mm_-_9.0a_4054228580",
+      "price": 699,
+      "price_text": "699 ₽",
+      "price_per_unit": null,
+      "price_is_from": false,
+      "published_at": "2026-09-23T04:11:50Z",
+      "description_snippet": "Серверный вентилятор Delta Pfc1412he 140 мм — 9.0A.\n\nДля Asic Whats miner, Innosilicon (разъем 6 пин).\n\nНапряжение питания 12v.\n\nДлина 140мм.\n\nШирина 140мм.\n\nТолщина 38мм.\n\nУровень шума 59 дба.\n\nПоток 380 Cfm.\n\nОбороты 7500 Rpm.\n\nНоминальный ток 9.0 ...",
+      "params_summary": null,
+      "city": "Москва"
+    },
+    {
+      "ad_id": "7471699117",
+      "title": "Система Hydro охлаждения Lianli 12KW (в наличии)",
+      "url": "https://www.avito.ru/moskva/oborudovanie_dlya_biznesa/sistema_hydro_ohlazhdeniya_lianli_12kw_v_nalichii_7471699117",
+      "price": 57648,
+      "price_text": "57 648 ₽",
+      "price_per_unit": null,
+      "price_is_from": false,
+      "published_at": "2026-10-17T04:05:01Z",
+      "description_snippet": "Система водяного охлаждения для майнеров Lianli 12KW Hydro.\nНапрямую от завода-производителя, официальная гарантия, кабель в комплекте.\nВ Наличии / самовывоз с офиса / бесплатная доставка.\nНаложенный платёж, лизинг, рассрочка и кредит.\n\nПокупая у Has...",
+      "params_summary": "Новый",
+      "city": "Москва"
+    },
+    {
+      "ad_id": "8342275689",
+      "title": "Блок питания т2т G1240А",
+      "url": "https://www.avito.ru/bratsk/tovary_dlya_kompyutera/blok_pitaniya_t2t_g1240a_8342275689",
+      "price": 1000,
+      "price_text": "1 000 ₽",
+      "price_per_unit": null,
+      "price_is_from": false,
+      "published_at": "2026-09-30T13:46:52Z",
+      "description_snippet": "Блoки G1240A(есть рабочий асик в сборе).\nВ paбoчeм cостоянии!\nЦенa за 1 шт!\nМожно использовать как дополнительный блок питания для разгона асиков whatsminer M30 M50.\n\nTехничeскиe харaктepиcтики.\n\nHoминальная мощнoсть. 2200 Вт, макcимальная — 2300 Вт....",
+      "params_summary": null,
+      "city": "Братск"
+    },
+    {
+      "ad_id": "7968721781",
+      "title": "Выкуп Асиков Старых, Выкуп Крупных Майнинг Ферм",
+      "url": "https://www.avito.ru/bratsk/predlozheniya_uslug/vykup_asikov_staryh_vykup_krupnyh_mayning_ferm_7968721781",
+      "price": 1000,
+      "price_text": "от 1 000 ₽",
+      "price_per_unit": null,
+      "price_is_from": true,
+      "published_at": "2026-10-01T06:50:59Z",
+      "description_snippet": "Выкуп Асиков В Любом Состоянии / Покупаем Старый Неликвид.\nБерём рабочие / нерабочие / устаревшие/ на запчасти / после перегрева / с ошибками чипов.\n\nЗдравствуйте!\nЕсли вам нужно продать продать любые асики, старое неликвидное майнинговое оборудовани...",
+      "params_summary": null,
+      "city": "Братск"
+    }
+  ]
+}

@@ -1,0 +1,102 @@
+{
+  "query": "Innosilicon | Екатеринбург",
+  "location": "Екатеринбург",
+  "page": 1,
+  "pagination": {
+    "page": 1,
+    "has_more": false
+  },
+  "ads": [
+    {
+      "ad_id": "7790591414",
+      "title": "Ремонт asic майнер antminer whatsminer",
+      "url": "https://www.avito.ru/ekaterinburg/predlozheniya_uslug/remont_asic_mayner_antminer_whatsminer_7790591414",
+      "price": 1000,
+      "price_text": "от 1 000 ₽",
+      "price_per_unit": null,
+      "price_is_from": true,
+      "published_at": "2026-10-03T13:45:44Z",
+      "description_snippet": "Меня зовут Александр. Профессионально занимаюсь диагностикой и ремонтом Asic-майнеров и комплектующих: хэш-платы, контрольные платы, блоки питания, системы охлаждения. Работаю без посредников, поэтому цены ниже, чем в сервисных центрах, а сроки — быс...",
+      "params_summary": null,
+      "city": "Екатеринбург"
+    },
+    {
+      "ad_id": "8409070911",
+      "title": "Innosilicon a9+ zmaster 120 kSol",
+      "url": "https://www.avito.ru/ekaterinburg/oborudovanie_dlya_biznesa/innosilicon_a9_zmaster_120_ksol_8409070911",
+      "price": 80000,
+      "price_text": "80 000 ₽",
+      "price_per_unit": null,
+      "price_is_from": false,
+      "published_at": "2026-10-19T08:17:49Z",
+      "description_snippet": "Innosilicon a9+ zmaster 120ksol 3шт в наличии ( работают).\nОтличные очень тихие аппараты, стабильно работают, потребление всего 1300ват, в родной прошивки есть есть повышать или занижать хэшрейт. Видео проверка, показ, личная встреча приветствуется. ...",
+      "params_summary": "Б/у",
+      "city": "Екатеринбург"
+    },
+    {
+      "ad_id": "8335916969",
+      "title": "Майнинг отель, хостинг для Asic майнеров",
+      "url": "https://www.avito.ru/ekaterinburg/oborudovanie_dlya_biznesa/mayning_otel_hosting_dlya_asic_maynerov_8335916969",
+      "price": 100,
+      "price_text": "100 ₽",
+      "price_per_unit": null,
+      "price_is_from": false,
+      "published_at": "2026-10-05T06:04:33Z",
+      "description_snippet": "Майнинг-отель Promminer — надёжный дата-центр для майнинга. Фиксированный тариф. Uptime 99%. Круглосуточная охрана.\n\nНапишите в чат — подберем оборудование и посчитаем доход от майнинга под ваш бюджет.\n\nТарифы на хостинг майнинга:\n\nот 5.7 ₽/квт·ч — р...",
+      "params_summary": "Новый",
+      "city": "Екатеринбург"
+    },
+    {
+      "ad_id": "8317029164",
+      "title": "Выкуп Асиков оптом Старые и неисправные Асики",
+      "url": "https://www.avito.ru/ekaterinburg/predlozheniya_uslug/vykup_asikov_optom_starye_i_neispravnye_asiki_8317029164",
+      "price": 777,
+      "price_text": "от 777 ₽",
+      "price_per_unit": null,
+      "price_is_from": true,
+      "published_at": "2026-10-05T06:17:16Z",
+      "description_snippet": "Выкуп Асиков И Майнеров В Любом Состоянии.\n\nВыкупаем Асик-майнеры по всей России — рабочие, неисправные, после ремонта, с ошибками, некомплектные и устаревшие модели.\n\nОсобенно интересуют крупные партии оборудования. Выкупаем майнинг-оборудование со ...",
+      "params_summary": null,
+      "city": "Екатеринбург"
+    },
+    {
+      "ad_id": "7936761795",
+      "title": "Выкуп Асиков Старых, Выкуп Крупных Майнинг Ферм",
+      "url": "https://www.avito.ru/ekaterinburg/predlozheniya_uslug/vykup_asikov_staryh_vykup_krupnyh_mayning_ferm_7936761795",
+      "price": 1000,
+      "price_text": "от 1 000 ₽",
+      "price_per_unit": null,
+      "price_is_from": true,
+      "published_at": "2026-10-08T07:23:54Z",
+      "description_snippet": "Выкуп Асиков В Любом Состоянии / Покупаем Старый Неликвид.\nБерём рабочие / нерабочие / устаревшие/ на запчасти / после перегрева / с ошибками чипов.\n\nЗдравствуйте!\nЕсли вам нужно продать продать любые асики, старое неликвидное майнинговое оборудовани...",
+      "params_summary": null,
+      "city": "Екатеринбург"
+    },
+    {
+      "ad_id": "2448436866",
+      "title": "Ремонт и обслуживание асиков",
+      "url": "https://www.avito.ru/ekaterinburg/predlozheniya_uslug/remont_i_obsluzhivanie_asikov_2448436866",
+      "price": 500,
+      "price_text": "от 500 ₽",
+      "price_per_unit": null,
+      "price_is_from": true,
+      "published_at": "2026-10-18T21:04:17Z",
+      "description_snippet": "Занимаемся ремонтом Асиков (блоки питания. Хеш платы, а так же Hydro аппараты.\nWhatsminer (любая модель).\nZ серия все модификации.\nZ11.\nZ15.\n\nBitmain.\n\nAntminer.\n\nIce River.\n\nInnosilicon.\n\nMicrobt.\nWhatsminer ( ремонт самой трудной неисправности хэш ...",
+      "params_summary": null,
+      "city": "Екатеринбург"
+    },
+    {
+      "ad_id": "8007285029",
+      "title": "Ремонт Майнинг оборудования/asic Antminer Whatsmin",
+      "url": "https://www.avito.ru/ekaterinburg/predlozheniya_uslug/remont_mayning_oborudovaniyaasic_antminer_whatsmin_8007285029",
+      "price": 1000,
+      "price_text": "от 1 000 ₽",
+      "price_per_unit": null,
+      "price_is_from": true,
+      "published_at": "2026-09-23T08:51:01Z",
+      "description_snippet": "Профессиональный ремонт майнинг оборудования в сервисном центре «Свой Мастер».\n\nВыполняем диагностику, ремонт и обслуживание Asic майнеров любой сложности. Работаем с популярными моделями: Antminer, Whatsminer, Avalon, Innosilicon и другим оборудован...",
+      "params_summary": null,
+      "city": "Екатеринбург"
+    }
+  ]
+}

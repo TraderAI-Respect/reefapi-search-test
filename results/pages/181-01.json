@@ -1,0 +1,37 @@
+{
+  "query": "Innosilicon A11 Pro | Казань",
+  "location": "Казань",
+  "page": 1,
+  "pagination": {
+    "page": 1,
+    "has_more": false
+  },
+  "ads": [
+    {
+      "ad_id": "7936816958",
+      "title": "Выкуп Асиков Старых, Выкуп Крупных Майнинг Ферм",
+      "url": "https://www.avito.ru/kazan/predlozheniya_uslug/vykup_asikov_staryh_vykup_krupnyh_mayning_ferm_7936816958",
+      "price": 1000,
+      "price_text": "от 1 000 ₽",
+      "price_per_unit": null,
+      "price_is_from": true,
+      "published_at": "2026-10-08T07:18:01Z",
+      "description_snippet": "Выкуп Асиков В Любом Состоянии / Покупаем Старый Неликвид.\nБерём рабочие / нерабочие / устаревшие/ на запчасти / после перегрева / с ошибками чипов.\n\nЗдравствуйте!\nЕсли вам нужно продать продать любые асики, старое неликвидное майнинговое оборудовани...",
+      "params_summary": null,
+      "city": "Казань"
+    },
+    {
+      "ad_id": "2315869258",
+      "title": "Ремонт асиков s17 s19 l7 t21 s21(asic repair)",
+      "url": "https://www.avito.ru/kazan/predlozheniya_uslug/remont_asikov_s17_s19_l7_t21_s21asic_repair_2315869258",
+      "price": 300,
+      "price_text": "от 300 ₽",
+      "price_per_unit": null,
+      "price_is_from": true,
+      "published_at": "2026-09-22T19:54:08Z",
+      "description_snippet": "Ремoнт аcиков 17 cеpии, T15, S15, S19 s19j s19 j pro, s19 k pro, t21, s21, L7, L9.\n\nЛoкaльный рeмонт 19 серии.\n(Замена неиcправныx дeтaлей/чипов).\nOт 3000 руб.\n\nPeмонт блoкoв питания.\nОт 2000 руб.\n\nБесплатная диагностика.\n\nРаботаем с 10:00 до 20:00.\n...",
+      "params_summary": null,
+      "city": "Казань"
+    }
+  ]
+}

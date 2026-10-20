@@ -288,8 +288,8 @@
     "Cheetah Miner | Казань",
     "Cheetah Miner | Уфа"
   ],
-  "cursor": 155,
-  "last_run": 1792481104.7127478,
+  "cursor": 205,
+  "last_run": 1792481526.242896,
   "pages": [
     {
       "next": 31,
@@ -1481,304 +1481,354 @@
       "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false,
+      "next": 2,
+      "done": true,
       "disabled": false,
-      "search_location": "Казань"
+      "search_location": "Казань",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false,
+      "next": 2,
+      "done": true,
       "disabled": false,
-      "search_location": "Уфа"
+      "search_location": "Уфа",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false,
+      "next": 2,
+      "done": true,
       "disabled": false,
-      "search_location": "Иркутск"
+      "search_location": "Иркутск",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false,
+      "next": 2,
+      "done": true,
       "disabled": false,
-      "search_location": "Красноярск"
+      "search_location": "Красноярск",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false,
+      "next": 2,
+      "done": true,
       "disabled": false,
-      "search_location": "Братск"
+      "search_location": "Братск",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false,
+      "next": 2,
+      "done": true,
       "disabled": false,
-      "search_location": "Ангарск"
+      "search_location": "Ангарск",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false,
+      "next": 2,
+      "done": true,
       "disabled": false,
-      "search_location": "Новосибирск"
+      "search_location": "Новосибирск",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false,
+      "next": 2,
+      "done": true,
       "disabled": false,
-      "search_location": "Кемерово"
+      "search_location": "Кемерово",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false,
+      "next": 2,
+      "done": true,
       "disabled": false,
-      "search_location": "Томск"
+      "search_location": "Томск",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false,
+      "next": 2,
+      "done": true,
       "disabled": false,
-      "search_location": "Омск"
+      "search_location": "Омск",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false,
+      "next": 2,
+      "done": true,
       "disabled": false,
-      "search_location": "Челябинск"
+      "search_location": "Челябинск",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false,
+      "next": 2,
+      "done": true,
       "disabled": false,
-      "search_location": "Екатеринбург"
+      "search_location": "Екатеринбург",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false,
+      "next": 2,
+      "done": true,
       "disabled": false,
-      "search_location": "Пермь"
+      "search_location": "Пермь",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false,
+      "next": 2,
+      "done": true,
       "disabled": false,
-      "search_location": "Казань"
+      "search_location": "Казань",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false,
+      "next": 2,
+      "done": true,
       "disabled": false,
-      "search_location": "Уфа"
+      "search_location": "Уфа",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false,
+      "next": 2,
+      "done": true,
       "disabled": false,
-      "search_location": "Иркутск"
+      "search_location": "Иркутск",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false,
+      "next": 2,
+      "done": true,
       "disabled": false,
-      "search_location": "Красноярск"
+      "search_location": "Красноярск",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false,
+      "next": 2,
+      "done": true,
       "disabled": false,
-      "search_location": "Братск"
+      "search_location": "Братск",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false,
+      "next": 2,
+      "done": true,
       "disabled": false,
-      "search_location": "Ангарск"
+      "search_location": "Ангарск",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false,
+      "next": 2,
+      "done": true,
       "disabled": false,
-      "search_location": "Новосибирск"
+      "search_location": "Новосибирск",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false,
+      "next": 2,
+      "done": true,
       "disabled": false,
-      "search_location": "Кемерово"
+      "search_location": "Кемерово",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false,
+      "next": 2,
+      "done": true,
       "disabled": false,
-      "search_location": "Томск"
+      "search_location": "Томск",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false,
+      "next": 2,
+      "done": true,
       "disabled": false,
-      "search_location": "Омск"
+      "search_location": "Омск",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false,
+      "next": 2,
+      "done": true,
       "disabled": false,
-      "search_location": "Челябинск"
+      "search_location": "Челябинск",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false,
+      "next": 2,
+      "done": true,
       "disabled": false,
-      "search_location": "Екатеринбург"
+      "search_location": "Екатеринбург",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false,
+      "next": 2,
+      "done": true,
       "disabled": false,
-      "search_location": "Пермь"
+      "search_location": "Пермь",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false,
+      "next": 2,
+      "done": true,
       "disabled": false,
-      "search_location": "Казань"
+      "search_location": "Казань",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false,
+      "next": 2,
+      "done": true,
       "disabled": false,
-      "search_location": "Уфа"
+      "search_location": "Уфа",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
+      "next": 2,
       "done": false,
       "disabled": false,
-      "search_location": "Иркутск"
+      "search_location": "Иркутск",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false,
+      "next": 2,
+      "done": true,
       "disabled": false,
-      "search_location": "Красноярск"
+      "search_location": "Красноярск",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false,
+      "next": 2,
+      "done": true,
       "disabled": false,
-      "search_location": "Братск"
+      "search_location": "Братск",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false,
+      "next": 2,
+      "done": true,
       "disabled": false,
-      "search_location": "Ангарск"
+      "search_location": "Ангарск",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false,
+      "next": 2,
+      "done": true,
       "disabled": false,
-      "search_location": "Новосибирск"
+      "search_location": "Новосибирск",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false,
+      "next": 2,
+      "done": true,
       "disabled": false,
-      "search_location": "Кемерово"
+      "search_location": "Кемерово",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false,
+      "next": 2,
+      "done": true,
       "disabled": false,
-      "search_location": "Томск"
+      "search_location": "Томск",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false,
+      "next": 2,
+      "done": true,
       "disabled": false,
-      "search_location": "Омск"
+      "search_location": "Омск",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false,
+      "next": 2,
+      "done": true,
       "disabled": false,
-      "search_location": "Челябинск"
+      "search_location": "Челябинск",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false,
+      "next": 2,
+      "done": true,
       "disabled": false,
-      "search_location": "Екатеринбург"
+      "search_location": "Екатеринбург",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
+      "next": 2,
       "done": false,
       "disabled": false,
-      "search_location": "Пермь"
+      "search_location": "Пермь",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
+      "next": 2,
       "done": false,
       "disabled": false,
-      "search_location": "Казань"
+      "search_location": "Казань",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
-      "done": false,
+      "next": 2,
+      "done": true,
       "disabled": false,
-      "search_location": "Уфа"
+      "search_location": "Уфа",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
+      "next": 2,
       "done": false,
       "disabled": false,
-      "search_location": "Иркутск"
+      "search_location": "Иркутск",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
+      "next": 2,
       "done": false,
       "disabled": false,
-      "search_location": "Красноярск"
+      "search_location": "Красноярск",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
+      "next": 2,
       "done": false,
       "disabled": false,
-      "search_location": "Братск"
+      "search_location": "Братск",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
+      "next": 2,
       "done": false,
       "disabled": false,
-      "search_location": "Ангарск"
+      "search_location": "Ангарск",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
+      "next": 2,
       "done": false,
       "disabled": false,
-      "search_location": "Новосибирск"
+      "search_location": "Новосибирск",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
+      "next": 2,
       "done": false,
       "disabled": false,
-      "search_location": "Кемерово"
+      "search_location": "Кемерово",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
+      "next": 2,
       "done": false,
       "disabled": false,
-      "search_location": "Томск"
+      "search_location": "Томск",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
+      "next": 2,
       "done": false,
       "disabled": false,
-      "search_location": "Омск"
+      "search_location": "Омск",
+      "api_limit_reached": false
     },
     {
-      "next": 1,
+      "next": 2,
       "done": false,
       "disabled": false,
-      "search_location": "Челябинск"
+      "search_location": "Челябинск",
+      "api_limit_reached": false
     },
     {
       "next": 1,
@@ -2291,9 +2341,9 @@
     1792439417.39991
   ],
   "consecutive_errors": 0,
-  "api_budget_reserved": 740,
-  "api_successful_requests": 335,
-  "api_charged_reported": 670,
+  "api_budget_reserved": 840,
+  "api_successful_requests": 385,
+  "api_charged_reported": 770,
   "search_mode": "personal_api_key",
   "last_query_error": {
     "query_index": 6,

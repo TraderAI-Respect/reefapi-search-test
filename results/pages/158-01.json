@@ -1,0 +1,50 @@
+{
+  "query": "Innosilicon A11 | Красноярск",
+  "location": "Красноярск",
+  "page": 1,
+  "pagination": {
+    "page": 1,
+    "has_more": false
+  },
+  "ads": [
+    {
+      "ad_id": "8326113572",
+      "title": "Innosilicon a11 mx",
+      "url": "https://www.avito.ru/krasnoyarsk/nastolnye_kompyutery/innosilicon_a11_mx_8326113572",
+      "price": 35000,
+      "price_text": "35 000 ₽",
+      "price_per_unit": null,
+      "price_is_from": false,
+      "published_at": "2026-09-27T09:41:02Z",
+      "description_snippet": "Innosilicon a11 mx,8gb работает без нареканий.",
+      "params_summary": null,
+      "city": "Красноярск"
+    },
+    {
+      "ad_id": "7959376179",
+      "title": "Выкуп старого майнинг оборудования по всей России",
+      "url": "https://www.avito.ru/krasnoyarsk/predlozheniya_uslug/vykup_starogo_mayning_oborudovaniya_po_vsey_rossii_7959376179",
+      "price": 5000,
+      "price_text": "от 5 000 ₽",
+      "price_per_unit": null,
+      "price_is_from": true,
+      "published_at": "2026-10-15T15:10:32Z",
+      "description_snippet": "От 100 шт.\n\nУ вас есть майнинговое оборудование, которое пылится без дела?\nХотите быстро и выгодно избавиться от устаревших Asic-майнеров?\nНужны деньги сегодня, а не через месяц?\n\nМЫ Выкупаем Любое Майнинговое Оборудование, Быстро И По Договорной Цен...",
+      "params_summary": null,
+      "city": "Красноярск"
+    },
+    {
+      "ad_id": "7936864060",
+      "title": "Выкуп Асиков Старых, Выкуп Крупных Майнинг Ферм",
+      "url": "https://www.avito.ru/krasnoyarsk/predlozheniya_uslug/vykup_asikov_staryh_vykup_krupnyh_mayning_ferm_7936864060",
+      "price": 1000,
+      "price_text": "от 1 000 ₽",
+      "price_per_unit": null,
+      "price_is_from": true,
+      "published_at": "2026-10-08T07:22:03Z",
+      "description_snippet": "Выкуп Асиков В Любом Состоянии / Покупаем Старый Неликвид.\nБерём рабочие / нерабочие / устаревшие/ на запчасти / после перегрева / с ошибками чипов.\n\nЗдравствуйте!\nЕсли вам нужно продать продать любые асики, старое неликвидное майнинговое оборудовани...",
+      "params_summary": null,
+      "city": "Красноярск"
+    }
+  ]
+}

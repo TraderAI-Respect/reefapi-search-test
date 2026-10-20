@@ -1,0 +1,76 @@
+{
+  "query": "Innosilicon | Томск",
+  "location": "Томск",
+  "page": 1,
+  "pagination": {
+    "page": 1,
+    "has_more": false
+  },
+  "ads": [
+    {
+      "ad_id": "8306381194",
+      "title": "Блок питания G1266 для Innosilicon T2Th, T2Thm",
+      "url": "https://www.avito.ru/tomsk/tovary_dlya_kompyutera/blok_pitaniya_g1266_dlya_innosilicon_t2th_t2thm_8306381194",
+      "price": 1500,
+      "price_text": "1 500 ₽",
+      "price_per_unit": null,
+      "price_is_from": false,
+      "published_at": "2026-10-05T04:03:45Z",
+      "description_snippet": "Могу продать по отдельности, могу все 4 штуки разом. Небольшой торг уместен.",
+      "params_summary": null,
+      "city": "Томск"
+    },
+    {
+      "ad_id": "7471699117",
+      "title": "Система Hydro охлаждения Lianli 12KW (в наличии)",
+      "url": "https://www.avito.ru/moskva/oborudovanie_dlya_biznesa/sistema_hydro_ohlazhdeniya_lianli_12kw_v_nalichii_7471699117",
+      "price": 57648,
+      "price_text": "57 648 ₽",
+      "price_per_unit": null,
+      "price_is_from": false,
+      "published_at": "2026-10-17T04:05:01Z",
+      "description_snippet": "Система водяного охлаждения для майнеров Lianli 12KW Hydro.\nНапрямую от завода-производителя, официальная гарантия, кабель в комплекте.\nВ Наличии / самовывоз с офиса / бесплатная доставка.\nНаложенный платёж, лизинг, рассрочка и кредит.\n\nПокупая у Has...",
+      "params_summary": "Новый",
+      "city": "Москва"
+    },
+    {
+      "ad_id": "8143169753",
+      "title": "Кулер/Вентилятор Delta 14х14 (9A) 4 пин WhatsMiner",
+      "url": "https://www.avito.ru/tomsk/tovary_dlya_kompyutera/kulerventilyator_delta_14h14_9a_4_pin_whatsminer_8143169753",
+      "price": 900,
+      "price_text": "900 ₽",
+      "price_per_unit": null,
+      "price_is_from": false,
+      "published_at": "2026-10-07T11:20:21Z",
+      "description_snippet": "Вентилятор Delta Pfc1412he-00 (9А).\n\nПодходит для whatsminer следующих моделей (также подходит для Innosilicon):\n- M20.\n- M20S.\n- M21.\n- M21S.\n\nМодель: Delta Pfc1412he-00.\n\nМощность: до 7000 оборотов.\n\nНапряжение: 12V.\n\nРазмер: 140x140x38.",
+      "params_summary": null,
+      "city": "Томск"
+    },
+    {
+      "ad_id": "7936618672",
+      "title": "Выкуп Асиков Старых, Выкуп Крупных Майнинг Ферм",
+      "url": "https://www.avito.ru/tomsk/predlozheniya_uslug/vykup_asikov_staryh_vykup_krupnyh_mayning_ferm_7936618672",
+      "price": 1000,
+      "price_text": "от 1 000 ₽",
+      "price_per_unit": null,
+      "price_is_from": true,
+      "published_at": "2026-10-08T07:18:49Z",
+      "description_snippet": "Выкуп Асиков В Любом Состоянии / Покупаем Старый Неликвид.\nБерём рабочие / нерабочие / устаревшие/ на запчасти / после перегрева / с ошибками чипов.\n\nЗдравствуйте!\nЕсли вам нужно продать продать любые асики, старое неликвидное майнинговое оборудовани...",
+      "params_summary": null,
+      "city": "Томск"
+    },
+    {
+      "ad_id": "8063460621",
+      "title": "Шумобокс на 2 asic Antminer/Whatsminer",
+      "url": "https://www.avito.ru/tomsk/tovary_dlya_kompyutera/shumoboks_na_2_asic_antminerwhatsminer_8063460621",
+      "price": 9000,
+      "price_text": "9 000 ₽",
+      "price_per_unit": null,
+      "price_is_from": false,
+      "published_at": "2026-09-23T11:56:28Z",
+      "description_snippet": "Шумобокс двухместный для Asic / Асик майнера / Шумоизоляционный короб для Antminer, Whatsminer.\n\nДо 90% снижения шума — с 85 дБ до 40–45 дБ.\n\nБез перегрева.\n\nПодходит для всех моделей Asic.\n\nЕсли вам нужен шумобокс для асика, чтобы разместить майнер ...",
+      "params_summary": null,
+      "city": "Томск"
+    }
+  ]
+}
