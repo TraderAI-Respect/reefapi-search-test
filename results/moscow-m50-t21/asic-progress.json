@@ -1,0 +1,29 @@
+{
+  "queries": [
+    "Whatsminer M50",
+    "Antminer T21"
+  ],
+  "pages": [
+    {
+      "next": 2,
+      "done": false,
+      "disabled": false,
+      "search_location": "moskva",
+      "api_limit_reached": false
+    },
+    {
+      "next": 1,
+      "done": false,
+      "disabled": false,
+      "search_location": "moskva"
+    }
+  ],
+  "cursor": 1,
+  "last_run": 1792580024.141985,
+  "api_budget_reserved": 2,
+  "api_successful_requests": 1,
+  "api_charged_reported": 2,
+  "search_mode": "personal_api_key",
+  "credit_limit": 20,
+  "consecutive_errors": 0
+}
