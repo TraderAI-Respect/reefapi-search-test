@@ -1,0 +1,857 @@
+name: Moscow M50 and T21
+
+on:
+  workflow_dispatch:
+    inputs:
+      credit_limit:
+        description: 'Общий лимит кредитов для ЭТОГО поиска (2–120). Сначала проверьте баланс ReefAPI.'
+        type: number
+        required: true
+        default: 0
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: asic-full-scan
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 110
+    env:
+      MOSCOW_CREDIT_LIMIT: ${{ inputs.credit_limit }}
+
+    steps:
+      - name: Start cloud cycle
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import os
+          import time
+          with open(os.environ["GITHUB_ENV"], "a") as output:
+              output.write("ASIC_RUN_STARTED_AT=" + str(time.time()) + "\n")
+          PY
+
+      - name: Checkout latest progress
+        id: checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Prepare scanner and check quota
+        id: gate
+        env:
+          REEF_API_KEY: ${{ secrets.REEF_API_KEY }}
+        shell: bash
+        run: |
+          cat > /tmp/asic_scan.py <<'PY'
+          """Direct ReefAPI search; API keys are read from the runner environment only."""
+          import json
+          import os
+          import re
+          import sys
+          import time
+          import urllib.error
+          import urllib.request
+          from email.utils import parsedate_to_datetime
+          from pathlib import Path
+          
+          QUERIES = ['Whatsminer M50','Antminer T21']
+          DISABLED_QUERIES = set()
+          CITY_TASKS = {q:{'query':q,'location':'moskva'} for q in QUERIES}
+          # The user explicitly sets a total budget for this separate search.
+          BUDGET = int(os.environ.get('MOSCOW_CREDIT_LIMIT','0'))
+          if not 2 <= BUDGET <= 120:
+              raise RuntimeError('Set credit_limit to 2..120 only after checking the available ReefAPI balance.')
+          COST = 2
+          MAX_PAGE = 30
+          CHECKPOINT = Path('results/moscow-m50-t21/asic-progress.json')
+          
+          def initialize(state, queries):
+              if state is None:
+                  state = {'queries':list(queries), 'pages':[{'next':1,'done':False} for _ in queries],
+                           'cursor':0, 'last_run':0}
+              saved = state.get('queries', [])
+              if len(state.get('pages', [])) != len(saved) or not saved:
+                  raise RuntimeError('Invalid checkpoint; refusing to restart.')
+              if saved != queries:
+                  if queries[:len(saved)] != saved:
+                      raise RuntimeError('Query order differs; checkpoint preserved.')
+                  state['pages'].extend({'next':1,'done':False} for _ in queries[len(saved):])
+                  state['queries'] = list(queries)
+              state.setdefault('api_budget_reserved', 0)
+              state.setdefault('api_successful_requests', 0)
+              state.setdefault('api_charged_reported', 0)
+              state['search_mode'] = 'personal_api_key'
+              state['credit_limit'] = BUDGET
+              # A larger manually confirmed budget may resume this search; don't clear other pauses.
+              if (state.get('paused') and (state.get('last_error') or {}).get('code')=='LOCAL_CREDIT_BUDGET'
+                      and state.get('api_budget_reserved',0)+COST <= BUDGET):
+                  state.pop('paused',None)
+                  state.pop('last_error',None)
+              # Keep query indices, page positions, completion flags and credit counters intact.
+              for query, entry in zip(state['queries'], state['pages']):
+                  entry['disabled'] = query in DISABLED_QUERIES
+                  if query in CITY_TASKS:
+                      entry['search_location'] = CITY_TASKS[query]['location']
+                  blocked = entry.get('blocked') or {}
+                  if is_last_page(blocked.get('code'),blocked.get('message',''),entry['next']):
+                      entry['done'] = True
+                      entry['end_of_pages'] = blocked
+                      entry['exhaustion_source'] = 'api_last_page'
+                      entry.pop('blocked',None)
+              # Recover this query-level pause only; never clear auth/budget pauses.
+              error = state.get('last_error') or {}
+              if state.get('paused') and error.get('code') == 'INVALID_PARAM':
+                  index = state.get('cursor',0)
+                  if isinstance(index,int) and 0 <= index < len(state['pages']):
+                      block_query(state,index,error.get('status',0),'INVALID_PARAM',
+                                  'Recovered saved INVALID_PARAM; original message was not recorded.')
+                      state.pop('paused',None)
+                      state['recovery'] = 'Known INVALID_PARAM isolated; other queries resumed.'
+              return state
+          
+          def is_last_page(code, message, page):
+              match = re.fullmatch(r"page (\d+) is past Avito's last page for this search", str(message).strip())
+              return code == 'INVALID_PARAM' and bool(match) and int(match.group(1)) == page
+          
+          def block_query(state, index, status, code, message):
+              entry = state['pages'][index]
+              if is_last_page(code,message,entry['next']):
+                  entry['done'] = True
+                  entry['end_of_pages'] = {'code':code,'message':message,'page':entry['next']}
+                  entry['exhaustion_source'] = 'api_last_page'
+                  entry.pop('blocked',None)
+                  state['cursor'] = (index+1) % len(state['queries'])
+                  state['consecutive_errors'] = 0
+                  state.pop('last_error',None)
+                  return
+              entry['blocked'] = {'status':status,'code':code,'page':entry['next'],
+                                  'message':str(message)[:400]}
+              state['last_query_error'] = {'query_index':index,'query':state['queries'][index],
+                                           **entry['blocked']}
+              state['cursor'] = (index+1) % len(state['queries'])
+              state['consecutive_errors'] = 0
+              state.pop('last_error',None)
+          
+          def active_indices(state):
+              return [i for i, entry in enumerate(state['pages'])
+                      if not entry.get('done') and not entry.get('disabled') and not entry.get('blocked')]
+          
+          def complete(state):
+              return bool(state.get('pages')) and all(
+                  entry.get('done') or entry.get('disabled') or entry.get('blocked') for entry in state['pages'])
+          
+          def reserve(state):
+              if state.get('api_budget_reserved', 0) + COST > BUDGET:
+                  state['paused'] = True
+                  state['last_error'] = {'code':'LOCAL_CREDIT_BUDGET', 'message':'Reserved API budget exhausted; not a completed scan.'}
+                  raise RuntimeError('Local credit budget exhausted.')
+              state['api_budget_reserved'] = state.get('api_budget_reserved', 0) + COST
+          
+          def make_request(key, query, page, location='all'):
+              body = {'query':query, 'location':location, 'page':page, 'sort':'relevance',
+                      'category_detection':False, 'include_sponsored':True,
+                      'include_fallback_results':False, 'include_pii':False}
+              return urllib.request.Request('https://api.reefapi.com/avito/v1/search',
+                  method='POST', data=json.dumps(body).encode('utf-8'),
+                  headers={'x-api-key':key, 'Content-Type':'application/json', 'Accept':'application/json',
+                           'User-Agent':'ASIC-search-GitHub-Actions'})
+          
+          def accept_page(state, index, payload):
+              if not isinstance(payload, dict) or payload.get('ok') is not True:
+                  raise ValueError('Invalid API response envelope.')
+              data = payload.get('data')
+              if not isinstance(data, dict) or not isinstance(data.get('listings'), list):
+                  raise ValueError('Missing listings array; page not advanced.')
+              number = state['pages'][index]['next']
+              echoed = data.get('page')
+              if echoed is not None and str(echoed) != str(number):
+                  raise ValueError('Returned page differs; page not advanced.')
+              if not all(isinstance(row, dict) for row in data['listings']):
+                  raise ValueError('Invalid listing record; page not advanced.')
+              nested = data.get('pagination')
+              nested = nested if isinstance(nested, dict) else {}
+              more = data.get('has_more', nested.get('has_more'))
+              has_next = data.get('has_next', nested.get('has_next'))
+              total = data.get('total_pages', nested.get('total_pages'))
+              if not isinstance(more, bool) and not isinstance(has_next, bool) and not isinstance(total, int):
+                  raise ValueError('Missing pagination; page not advanced.')
+              exhausted = more is False or has_next is False or (isinstance(total,int) and number >= total)
+              entry = state['pages'][index]
+              entry.update(next=number+1, done=exhausted or number>=MAX_PAGE,
+                           api_limit_reached=number>=MAX_PAGE and not exhausted)
+              state['cursor'] = (index+1) % len(state['queries'])
+              state['api_successful_requests'] += 1
+              state['consecutive_errors'] = 0
+              state.pop('last_error', None)
+              meta = payload.get('meta')
+              charged = meta.get('charged_credits') if isinstance(meta,dict) else None
+              if isinstance(charged,(int,float)) and not isinstance(charged,bool) and charged >= 0:
+                  state['api_charged_reported'] = state.get('api_charged_reported',0) + charged
+                  if charged > COST:
+                      state['paused'] = True
+                      state['last_error'] = {'code':'COST_CHANGED', 'message':'Reported cost exceeded 2 credits; review required.'}
+              return data
+          
+          def failure(state, status, code, now, headers):
+              safe_codes = {'AUTH_FAILED','QUOTA_EXCEEDED','RATE_LIMITED','UPSTREAM_TIMEOUT',
+                            'TARGET_BLOCKED','DISABLED','MISSING_PARAM','INVALID_PARAM','PARSE_ERROR','INTERNAL'}
+              code = code if code in safe_codes else 'API_ERROR'
+              state['last_error'] = {'status':status, 'code':code}
+              state['consecutive_errors'] = state.get('consecutive_errors',0) + 1
+              if status == 429 or code == 'RATE_LIMITED':
+                  until = now + 60
+                  value = headers.get('retry-after', '')
+                  try:
+                      until = max(until, now+float(value))
+                  except (ValueError,TypeError):
+                      try:
+                          until = max(until, parsedate_to_datetime(value).timestamp())
+                      except Exception:
+                          pass
+                  state['not_before'] = until
+              elif status in (400,401,402,403) or code in ('AUTH_FAILED','QUOTA_EXCEEDED') or state['consecutive_errors'] >= 3:
+                  state['paused'] = True
+          
+          def batch_size(state):
+              return 50 if state.get('api_successful_requests',0) else 1
+          
+          def write_json(path, value):
+              path.parent.mkdir(parents=True, exist_ok=True)
+              temporary = path.with_suffix(path.suffix+'.tmp')
+              temporary.write_text(json.dumps(value,ensure_ascii=False,indent=2)+'\n', encoding='utf-8')
+              temporary.replace(path)
+          
+          def allowed(state, now):
+              return (bool(state.get('pages')) and not state.get('paused')
+                      and not complete(state)
+                      and now >= state.get('not_before',0)
+                      and state.get('api_budget_reserved',0)+COST <= BUDGET)
+          
+          def enforce_budget(state):
+              if state['api_budget_reserved']+COST > BUDGET and not complete(state):
+                  state['paused'] = True
+                  state['last_error'] = {'code':'LOCAL_CREDIT_BUDGET', 'message':f'Local {BUDGET}-credit reserve reached; search incomplete.'}
+          
+          def summary(state):
+              active = [entry for entry in state['pages'] if not entry.get('disabled')]
+              done = sum(bool(x.get('done')) for x in active)
+              disabled = len(state['pages']) - len(active)
+              blocked = sum(bool(x.get('blocked')) for x in active)
+              message = (f'Completed active queries: {done}/{len(active)}; disabled: {disabled}\n'
+                         f'Queries requiring review (not completed): {blocked}\n'
+                         f'Personal-key successful requests: {state["api_successful_requests"]}\n'
+                         f'Conservative credit reservation: {state["api_budget_reserved"]}/{BUDGET}\n'
+                         f'Paused: {bool(state.get("paused"))}\n')
+              if state.get('last_error'):
+                  message += 'Last error: ' + json.dumps(state['last_error'],ensure_ascii=False)+'\n'
+              city_entries = [entry for entry in state['pages'] if entry.get('search_location')]
+              message += f'City queries completed: {sum(bool(x.get("done")) for x in city_entries)}/{len(city_entries)}\n'
+              print(message, flush=True)
+              with open(os.environ['GITHUB_STEP_SUMMARY'],'a',encoding='utf-8') as stream:
+                  stream.write('\n```text\n'+message+'```\n')
+          
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, request, fp, code, msg, headers, newurl):
+                  return None
+          
+          def main():
+              if CHECKPOINT.exists():
+                  state = initialize(json.loads(CHECKPOINT.read_text(encoding='utf-8')), QUERIES)
+              else:
+                  if any(Path('results/moscow-m50-t21/pages').glob('*.json')):
+                      raise RuntimeError('Saved results without checkpoint; refusing to restart.')
+                  state = initialize(None, QUERIES)
+              key = os.environ.get('REEF_API_KEY','').strip()
+              if not key:
+                  state['paused'] = True
+                  state['last_error'] = {'code':'MISSING_SECRET', 'message':'REEF_API_KEY is not available to this GitHub job.'}
+              enforce_budget(state)
+              write_json(CHECKPOINT,state)
+              if sys.argv[1] == '--check':
+                  with open(os.environ['GITHUB_OUTPUT'],'a') as stream:
+                      stream.write('run='+str(allowed(state,time.time())).lower()+'\n')
+                  summary(state)
+                  return
+              opener = urllib.request.build_opener(NoRedirect())
+              for _ in range(batch_size(state)):
+                  if not allowed(state,time.time()):
+                      break
+                  active = active_indices(state)
+                  index = next((i for i in active if i>=state['cursor']),active[0])
+                  query, number = state['queries'][index], state['pages'][index]['next']
+                  task = CITY_TASKS.get(query, {'query':query,'location':'all'})
+                  if not 1 <= number <= MAX_PAGE:
+                      raise RuntimeError('Invalid page in checkpoint.')
+                  reserve(state)
+                  write_json(CHECKPOINT,state)
+                  failed = False
+                  try:
+                      status, headers, payload = 200, {}, None
+                      try:
+                          with opener.open(make_request(key,task['query'],number,location=task['location']),timeout=90) as response:
+                              status = response.status
+                              headers = {k.lower():v for k,v in response.headers.items()}
+                              payload = json.load(response)
+                      except urllib.error.HTTPError as error:
+                          status = error.code
+                          headers = {k.lower():v for k,v in error.headers.items()}
+                          try:
+                              payload = json.load(error)
+                          except Exception:
+                              payload = None
+                      if status != 200 or not isinstance(payload,dict) or payload.get('ok') is not True:
+                          error = payload.get('error') if isinstance(payload,dict) else None
+                          code = error.get('code') if isinstance(error,dict) else None
+                          if code == 'INVALID_PARAM' and status in (200,400,422):
+                              message = str(error.get('message') or 'API rejected query/page parameters.')
+                              message = message.replace(key,'[REDACTED]')
+                              message = re.sub(r'ak_live_[A-Za-z0-9_-]+','[REDACTED]',message)
+                              message = re.sub(r'https?://\S+','[URL REDACTED]',message)
+                              block_query(state,index,status,code,message)
+                              label = 'last page reached' if state['pages'][index].get('done') else 'deferred: INVALID_PARAM'
+                              print(f'Query {index}, page {number}: {label}. Continuing other queries.',flush=True)
+                          else:
+                              failure(state,status,code,time.time(),headers)
+                              failed = True
+                      else:
+                          # Validate and advance a copy; only install it after saving the page.
+                          next_state = json.loads(json.dumps(state))
+                          data = accept_page(next_state,index,payload)
+                          fields = ['ad_id','title','url','price','price_text','price_per_unit',
+                                    'price_is_from','published_at','description_snippet','params_summary']
+                          ads = []
+                          for row in data['listings']:
+                              item = {field:row.get(field) for field in fields}
+                              location = row.get('location')
+                              item['city'] = location.get('name') if isinstance(location,dict) else None
+                              # Never persist a credential even if an upstream response echoes it.
+                              item = {k:(v.replace(key,'[REDACTED]') if isinstance(v,str) else v) for k,v in item.items()}
+                              ads.append(item)
+                          pagination = {k:data[k] for k in ['page','has_more','has_next','total_pages','total_results','pagination'] if k in data}
+                          write_json(Path(f'results/moscow-m50-t21/pages/{index:03d}-{number:02d}.json'),
+                                     {'query':query,'location':task['location'],'page':number,'pagination':pagination,'ads':ads})
+                          state = next_state
+                          print(f'Saved query {index}, page {number}: {len(ads)} listings.',flush=True)
+                  except Exception:
+                      # Deliberately do not print exceptions, request headers or response bodies.
+                      failure(state,0,'API_ERROR',time.time(),{})
+                      failed = True
+                  finally:
+                      state['last_run'] = time.time()
+                      enforce_budget(state)
+                      write_json(CHECKPOINT,state)
+                  if failed:
+                      break
+                  time.sleep(1)
+              summary(state)
+          
+          if __name__ == '__main__':
+              main()
+          PY
+          python3 /tmp/asic_scan.py --check
+
+      - name: Search next pages
+        id: search
+        if: steps.gate.outputs.run == 'true'
+        env:
+          REEF_API_KEY: ${{ secrets.REEF_API_KEY }}
+        shell: bash
+        run: |
+          python3 /tmp/asic_scan.py --run
+
+      - name: Build matching ASIC table
+        id: report
+        if: always() && steps.checkout.outcome == 'success'
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          """Conservative report from saved public search snippets; no network calls."""
+          import csv
+          import html
+          import json
+          import os
+          import re
+          from datetime import datetime, timedelta, timezone
+          from pathlib import Path
+          from urllib.parse import urlsplit
+          
+          BRAND_ALIASES = {
+              'антмайнер':'antminer', 'антминер':'antminer', 'антмайнeр':'antminer',
+              'битмайн':'bitmain', 'битмейн':'bitmain',
+              'ватсмайнер':'whatsminer', 'вотсмайнер':'whatsminer', 'вацмайнер':'whatsminer',
+              'микробт':'microbt', 'инносиликон':'innosilicon', 'иносиликон':'innosilicon',
+              'инносилликон':'innosilicon', 'авалон':'avalon', 'канаан':'canaan',
+              'битфури':'bitfury', 'битфьюри':'bitfury', 'эбит':'ebit',
+              'хаммер':'hummer', 'айден':'aiden', 'аладдин':'aladdin', 'чита':'cheetah',
+              'про':'pro', 'мини':'mini', 'турбо':'turbo', 'гидро':'hydro',
+              'хр':'xp', 'хп':'xp',
+          }
+          MODEL_LETTERS = str.maketrans({'с':'s','т':'t','л':'l','м':'m','а':'a','д':'d',
+              'з':'z','б':'b','в':'b','н':'h','к':'k','е':'e','и':'i','ж':'j','ф':'f','х':'x'})
+          
+          def normalize_models(text):
+              """Normalize only brands/model-shaped tokens, preserving Russian sales text."""
+              text = re.sub(r'\b([mм])\s+50\b', r'\g<1>50', str(text), flags=re.I)
+              text = re.sub(r'\b([tт])\s+21\b', r'\g<1>21', text, flags=re.I)
+              def word(match):
+                  value = match.group().lower()
+                  if value in BRAND_ALIASES:
+                      return BRAND_ALIASES[value]
+                  for alias, brand in BRAND_ALIASES.items():
+                      if brand in ('pro','mini','turbo','hydro','xp'):
+                          continue
+                      if value.startswith(alias) and re.match(r'[a-zа-яё]?\d', value[len(alias):]):
+                          value = brand + ' ' + value[len(alias):]
+                          break
+                  chunks = value.split(' ')
+                  result = []
+                  for chunk in chunks:
+                      if re.match(r'^[a-zа-яё]{1,4}\d', chunk):
+                          chunk = re.sub(r'про(?=\+?$)', 'pro', chunk)
+                          chunk = re.sub(r'(?:хр|хп)(?=\+?$)', 'xp', chunk)
+                          chunk = re.sub(r'гидро$', 'hydro', chunk)
+                          chunk = chunk.translate(MODEL_LETTERS)
+                      result.append(chunk)
+                  return ' '.join(result)
+              text = re.sub(r'[a-zа-яё][a-zа-яё0-9+/-]*', word, str(text), flags=re.I)
+              text = re.sub(r'\b(antminer|bitmain|whatsminer|microbt|innosilicon|avalon|canaan|bitfury|ebit)(?=[a-z]?\d)', r'\1 ', text, flags=re.I)
+              text = re.sub(r'(?<=pro)\s+с\b', ' s', text, flags=re.I)
+              return text
+          
+          TOKEN = re.compile(
+              r'\b(?:s19(?:\s*[jkie])?(?:\s*pro\+?)?(?:\s*xp\+?)?(?:\s*(?:hydro|hyd))?|s17(?:\s*pro|\+|e)?|s9[a-z]*|s7(?:-f1)?|s5|'
+              r't21|t19|t17[a-z+]*|t15|t9\+|l3\+{0,2}|d3|z9\s*mini|m\d+[a-z+]*|'
+              r'a1[01](?:\s*pro)?|t3s|t3h|t3\+(?:\s*pro)?|t2\s*turbo|'
+              r't2tt?i|t2tsr|t2thf|t2thm|t2tz|t2ts|t2t(?:\s*th\+)?|'
+              r'1126(?:\s*pro\s*s)?|1146(?:\s*pro)?|1066(?:\s*pro)?|1046|'
+              r'a?921|a?920h?|841|a?851|a?852|e10|e9(?:\s*miner\+)?|'
+              r'b8|bt200|h7\s*pro|a1|f1)(?![a-z0-9+])', re.I)
+          BRANDED = re.compile(r'\b(?:antminer|whatsminer|microbt|innosilicon|avalon|canaan|ebit|bitfury|hummer|aiden|aladdin|cheetah)\b', re.I)
+          PARTS = re.compile(r'х[еэ]ш.?плат|контрольн|контроллер|конвертер|переходник|эмулятор|\bкпу\b|\bбп\b|блок[аи]?\s+питани|корпус|вентил|кулер|шлейф|кабел|коса|чип|водоблок|жидкост|ванна|стойк|стеллаж|трафарет|тестер|контейнер|фланец|термопаст|разъ[её]м|коннектор|планка|шумбокс', re.I)
+          BUYER = re.compile(r'выкуп|скупк|куплю|покупаем|выкупаем|при[её]м|утилизац|ремонт|хостинг|размещен|настройка|прошивка', re.I)
+          ACCESSORY = re.compile(r'фильтр|filter|памят|memory|микросхем|комплектующ|запчаст|аксессуар|accessor|пылезащит|воздуховод|шумоглуш|ddr|eeprom|nand', re.I)
+          UNITS = r'(?:шт(?:ук(?:и|а)?)?\.?|устройств\w*|аппарат\w*|асик\w*|майнер\w*|комплект\w*)'
+          QTY = re.compile(r'(?<![\d.,])(?P<lo>\d{1,5})(?:\s*[–—-]\s*(?P<hi>\d{1,5}))?\s*' + UNITS, re.I)
+          RATE = re.compile(r'(\d+(?:[.,]\d+)?)(?:\s*[/–-]\s*(\d+(?:[.,]\d+)?))?\s*(?:th|t[hx]?|тх|т|gh|g|г)(?:\b|/)', re.I)
+          PRICE = re.compile(r'(\d[\d\s.,]*\s*(?:₽|руб\.?|р\.))\s*(?:/\s*(?:шт\.?|комплект)|за\s+(?:1\s*)?(?:шт\w*|комплект))', re.I)
+          
+          def identify(line):
+              line = normalize_models(line)
+              found = []
+              for match in TOKEN.finditer(line):
+                  token = re.sub(r'\s+', '', match.group().lower())
+                  if token == 'm50':
+                      found.append({'model':'Whatsminer M50','minimum':10,'valid':True})
+                  elif token == 't21':
+                      found.append({'model':'Antminer T21','minimum':20,'valid':True})
+                  else:
+                      # Preserve unrelated model boundaries so stock is never borrowed.
+                      found.append({'model':match.group(),'minimum':20,'valid':False})
+              return found
+          
+          def listing_url(ad):
+              url = str(ad.get('url') or '')
+              part = urlsplit(url)
+              aid = str(ad.get('ad_id') or '')
+              if (part.scheme == 'https' and (part.hostname == 'avito.ru' or (part.hostname or '').endswith('.avito.ru'))
+                      and aid.isdigit() and re.search(r'_' + re.escape(aid) + r'$', part.path)):
+                  return part._replace(query='', fragment='').geturl()
+              return None
+          
+          def classify(ad):
+              title, desc = str(ad.get('title') or ''), str(ad.get('description_snippet') or '')
+              if not re.fullmatch(r'(?:г\.?\s*)?москва', str(ad.get('city') or '').strip(), re.I):
+                  return [], []
+              url = listing_url(ad)
+              # Whole faulty miners sold "на запчасти" are allowed, accessory lots are not.
+              title_goods = re.sub(r'на\s+запчасти', '', title, flags=re.I)
+              if not url or BUYER.search(title) or PARTS.search(title) or ACCESSORY.search(title_goods):
+                  return [], []
+              if re.search(r'выкупаем|выкуплю|скупаем|куплю|утилизац|принимаем ваши', desc, re.I):
+                  return [], []
+              title = normalize_models(title)
+              normalized_desc = normalize_models(desc)
+              title_models = identify(title)
+              current = title_models[0] if len(title_models) == 1 else None
+              groups = []
+              segment = []
+              # Split multiple model offers sharing a line before assigning stock.
+              clauses = []
+              for line in normalized_desc.splitlines():
+                  tokens = list(TOKEN.finditer(line))
+                  boundaries = []
+                  brands = list(BRANDED.finditer(line))
+                  for previous_model, model in zip(tokens, tokens[1:]):
+                      boundary = model.start()
+                      for brand in brands:
+                          if previous_model.end() <= brand.start() < model.start() and not line[brand.end():model.start()].strip():
+                              boundary = brand.start()
+                      boundaries.append(boundary)
+                  previous = 0
+                  for boundary in boundaries:
+                      clauses.append(line[previous:boundary])
+                      previous = boundary
+                  clauses.append(line[previous:])
+              for line in clauses:
+                  if not line.strip():
+                      continue
+                  models = identify(line)
+                  if models or BRANDED.search(line):
+                      # A generic introduction like "Продаю Antminer" does not replace a model.
+                      generic = not models and not re.search(r'\b[a-z]\d', line, re.I)
+                      if not generic:
+                          if current and segment:
+                              groups.append((current, '\n'.join(segment)))
+                          current = models[0] if len(models) == 1 else None
+                          segment = []
+                  segment.append(line)
+              if current:
+                  groups.append((current, '\n'.join(segment)))
+              if not desc and len(title_models) == 1:
+                  groups.append((title_models[0], title))
+              rows = []
+              for model, segment in groups:
+                  if not model['valid']:
+                      continue
+                  quantity = None
+                  for line in segment.splitlines():
+                      accessory = ACCESSORY.search(re.sub(r'на\s+запчасти', '           ', line, flags=re.I))
+                      if accessory:
+                          prefix = line[:accessory.start()]
+                          # "120 комплектов фильтров" counts accessories, not whole miners.
+                          if not re.search(r'\d+\s*(?:асик\w*|майнер\w*|аппарат\w*|устройств\w*)',prefix,re.I) and not re.search(r'[.!?]\s*$',prefix):
+                              continue
+                          line = prefix
+                      if PARTS.search(line) or re.search(r'мин(?:имальн\w*)?\s+заказ|заказ\s+от|вмещ|помещ|мест\b|от\s*\d+\s*' + UNITS, line, re.I):
+                          continue
+                      if re.search(r'продан|продал|продано', line, re.I):
+                          tail = re.search(r'остал\w*\s*[:—-]?\s*(.*)', line, re.I)
+                          line = tail.group(1) if tail else ''
+                      for q in QTY.finditer(line):
+                          if re.search(r'плат|чип|кулер|вентил|шлейф', line[q.end():q.end()+18], re.I):
+                              continue
+                          lo = int(q['lo'])
+                          if q['hi'] and int(q['hi']) < lo:
+                              continue
+                          quantity = (lo, q.group(), line.strip())
+                  implicit_single = (any(m['valid'] and m['model']==model['model'] for m in title_models)
+                                     and (not ACCESSORY.search(re.sub(r'на\s+запчасти','',segment,flags=re.I)) or
+                                          re.search(r'продам\s+(?:свой\s+)?(?:рабочи[йе]\s+)?(?:асик|майнер)',segment,re.I)))
+                  if quantity is None and model['minimum'] == 1 and implicit_single:
+                      # Single-device eligibility, not an invented stock count.
+                      quantity = (1, 'от 1; остаток не указан', 'Продажа A10/A11; точный остаток не указан')
+                  if not quantity or quantity[0] < model['minimum']:
+                      continue
+                  price = PRICE.search(segment)
+                  if price:
+                      price_text = price.group().strip()
+                  elif len(title_models) == 1 and title_models[0]['model'] == model['model']:
+                      price_text = 'Карточка: ' + str(ad.get('price_text') or 'не указана') + '; единица цены не подтверждена'
+                  else:
+                      price_text = 'Цена нужной модели не установлена'
+                  condition = str(ad.get('params_summary') or '')
+                  if re.search(r'неисправ|нерабоч|не рабоч|на запчасти|под ремонт', segment, re.I):
+                      condition = 'Неисправные / на запчасти; по описанию'
+                  elif re.search(r'все.*рабочи|всё.*рабоч|аппараты рабочие|полностью рабоч|рабочем состоянии', desc, re.I):
+                      condition = (condition + '; ' if condition else '') + 'заявлены рабочими'
+                  rows.append({'ad_id':str(ad['ad_id']), 'model':model['model'],
+                               'quantity_min':quantity[0], 'quantity':quantity[1],
+                               'city':str(ad.get('city') or 'не указан'), 'price':price_text,
+                               'condition':condition or 'Уточнить', 'evidence':quantity[2], 'url':url})
+              if rows:
+                  return rows, []
+              if title_models or any(identify(line) for line in desc.splitlines()):
+                  return [], [{'ad_id':str(ad['ad_id']), 'title':title, 'city':str(ad.get('city') or ''),
+                               'url':url, 'reason':'Нет однозначного совпадения модели, хешрейта и количества по сохранённому описанию'}]
+              return [], []
+          
+          def collect(reports):
+              ads = {}
+              for report in reports:
+                  for ad in report.get('ads', []):
+                      aid = str(ad.get('ad_id') or '')
+                      if aid.isdigit():
+                          # Keep different snippets from duplicate queries; assess each separately.
+                          ads.setdefault(aid, []).append(ad)
+              rows, pending = {}, {}
+              for aid, versions in ads.items():
+                  for ad in versions:
+                      matches, review = classify(ad)
+                      for row in matches:
+                          rows.setdefault((aid, row['model']), row)
+                      for row in review:
+                          pending.setdefault(aid, row)
+                  if any(key[0] == aid for key in rows):
+                      pending.pop(aid, None)
+              return sorted(rows.values(), key=lambda x:(x['model'], x['city'], x['ad_id'])), list(pending.values())
+          
+          def cell(value):
+              value = html.escape(str(value), quote=False).replace('\n',' ').replace('\r',' ')
+              return value.replace('\\','\\\\').replace('|','\\|').replace('[','\\[').replace(']','\\]').replace('*','\\*').replace('`','\\`').replace('_','\\_')
+          
+          def main():
+              root = Path('results/moscow-m50-t21')
+              files = sorted((root/'pages').glob('*.json'))
+              reports = [json.loads(p.read_text(encoding='utf-8')) for p in files]
+              rows, pending = collect(reports)
+              folder = root/'matches'
+              folder.mkdir(parents=True, exist_ok=True)
+              now = datetime.now(timezone(timedelta(hours=5))).strftime('%d.%m.%Y %H:%M')
+              text = ['# Москва: Whatsminer M50 и Antminer T21', '', f'Обновлено: {now} (Екатеринбург).', '',
+                      'Только Москва. Whatsminer M50 — от 10 целых устройств, Antminer T21 — от 20 у одного продавца. M50S/M50S+/M50S++ в этот поиск не включены.', '',
+                      'Это автоматический отбор по сохранённым фрагментам описаний. Наличие, состояние и цена заявлены продавцами; подтверждения контактом нет. '
+                      
+                      'Неоднозначные объявления находятся в [отдельной таблице проверки](../review/README.md).', '',
+                      f'Сохранённых страниц: {len(files)}. Подходящих позиций: {len(rows)}.', '',
+                      '| Количество | Город | Модель | Цена | Состояние | Подтверждение | Ссылка |',
+                      '|---|---|---|---|---|---|---|']
+              for row in rows:
+                  text.append('| ' + ' | '.join(cell(row[k]) for k in ['quantity','city','model','price','condition','evidence']) + f" | [Авито]({row['url']}) |")
+              if not rows:
+                  text += ['', 'Пока нет однозначно подходящих объявлений. Это не означает, что поиск закончен.']
+              state_path = root/'asic-progress.json'
+              if state_path.exists():
+                  state = json.loads(state_path.read_text(encoding='utf-8'))
+                  entries = state.get('pages', [])
+                  active = [x for x in entries if not x.get('disabled')]
+                  finished = sum(bool(x.get('done')) for x in active)
+                  caps = sum(bool(x.get('api_limit_reached')) for x in active)
+                  text += ['', f'Завершены активные запросы: {finished}/{len(active)}. Отключены: {len(entries)-len(active)}. Достигли предела 30 страниц: {caps}.']
+                  blocked = [(i,x) for i,x in enumerate(entries) if x.get('blocked') and not x.get('disabled')]
+                  if blocked:
+                      text += ['', '**Запросы с ошибкой: отложены, не считаются завершёнными. Остальные продолжаются.**', '',
+                               '| Запрос | Страница | Ошибка |', '|---|---|---|']
+                      for index, entry in blocked:
+                          error = entry['blocked']
+                          text.append('| ' + ' | '.join(cell(v) for v in [
+                              state['queries'][index],error['page'],
+                              str(error['code'])+': '+str(error.get('message',''))]) + ' |')
+                  if state.get('search_mode') == 'personal_api_key':
+                      reserved = state.get('api_budget_reserved', 0)
+                      succeeded = state.get('api_successful_requests', 0)
+                      text += ['', f'Личный API-ключ: успешных запросов {succeeded}. Консервативный резерв расхода: {reserved}/{state.get("credit_limit",0)} кредитов. '
+                               'Это счётчик workflow, не фактический баланс ReefAPI; ошибки тоже резервируются.']
+                  if state.get('last_error'):
+                      text += ['', 'Последняя ошибка поиска: ' + cell(json.dumps(state['last_error'], ensure_ascii=False))]
+                  if state.get('paused'):
+                      text += ['', '**Поиск приостановлен из-за ошибки; требуется проверка журнала.**']
+              (folder/'README.md').write_text('\n'.join(text)+'\n', encoding='utf-8')
+              (folder/'ads.json').write_text(json.dumps(rows, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
+              with (folder/'ads.csv').open('w', encoding='utf-8-sig', newline='') as stream:
+                  fields = ['quantity','city','model','price','condition','evidence','url','ad_id']
+                  writer = csv.writer(stream)
+                  writer.writerow(fields)
+                  for row in rows:
+                      values = [str(row[k]) for k in fields]
+                      writer.writerow(["'"+v if v.startswith(('=','+','-','@')) else v for v in values])
+              review = root/'review'
+              review.mkdir(parents=True, exist_ok=True)
+              review_text = ['# Объявления на дополнительную проверку', '', 'Эти объявления НЕ признаны подходящими. Сверьте полное описание и наличие с продавцом.', '',
+                             '| Город | Объявление | Причина | Ссылка |', '|---|---|---|---|']
+              for row in pending:
+                  review_text.append('| ' + ' | '.join(cell(row[k]) for k in ['city','title','reason']) + f" | [Авито]({row['url']}) |")
+              (review/'README.md').write_text('\n'.join(review_text)+'\n', encoding='utf-8')
+              summary = os.environ.get('GITHUB_STEP_SUMMARY')
+              if summary:
+                  repo = os.environ['GITHUB_REPOSITORY']
+                  with open(summary, 'a', encoding='utf-8') as stream:
+                      stream.write(f'\n## Подходящие объявления\n\nНайдено позиций: {len(rows)}. '
+                                   f'[Открыть таблицу](https://github.com/{repo}/tree/main/results/moscow-m50-t21/matches)\n\n')
+                      stream.write('\n'.join(text[text.index('| Количество | Город | Модель | Цена | Состояние | Подтверждение | Ссылка |'):])+'\n')
+              print(f'Report: {len(rows)} matching model positions; {len(pending)} need review.')
+          
+          if __name__ == '__main__':
+              main()
+          PY
+
+      - name: Save progress and results
+        id: save
+        if: always()
+        shell: bash
+        run: |
+          if [ -f results/moscow-m50-t21/asic-progress.json ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add results/moscow-m50-t21/
+            if ! git diff --cached --quiet; then
+              git commit -m "Save ASIC search progress and results"
+              git push origin HEAD:main
+            fi
+          fi
+
+      - name: Stop workflow when complete or unsafe to continue
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GATE_OUTCOME: ${{ steps.gate.outcome }}
+          SEARCH_OUTCOME: ${{ steps.search.outcome }}
+          SAVE_OUTCOME: ${{ steps.save.outcome }}
+          REPORT_OUTCOME: ${{ steps.report.outcome }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import urllib.request
+          from pathlib import Path
+
+          reason = None
+
+          if os.environ["SAVE_OUTCOME"] == "failure":
+              reason = (
+                  "Paused: saving progress failed. "
+                  "Manual review required to avoid repeated requests."
+              )
+          elif os.environ["REPORT_OUTCOME"] == "failure":
+              reason = "Paused: report generation failed; review logs."
+          elif os.environ["GATE_OUTCOME"] == "failure":
+              reason = (
+                  "Paused: scanner preparation or checkpoint validation failed."
+              )
+          elif os.environ["SEARCH_OUTCOME"] == "failure":
+              reason = (
+                  "Paused: scanner stopped unexpectedly. "
+                  "Review logs before re-enabling."
+              )
+          else:
+              path = Path("results/moscow-m50-t21/asic-progress.json")
+              if path.exists():
+                  state = json.loads(
+                      path.read_text(encoding="utf-8")
+                  )
+                  pages = state.get("pages", [])
+
+                  if state.get("paused"):
+                      reason = (
+                          "Paused: access denied or repeated search errors. "
+                          "See last_error in the checkpoint."
+                      )
+                  elif pages and all(
+                      page.get("done") or page.get("disabled") or page.get("blocked") for page in pages
+                  ):
+                      capped = sum(
+                          bool(page.get("api_limit_reached"))
+                          for page in pages if not page.get("disabled")
+                      )
+                      blocked = sum(bool(p.get('blocked')) for p in pages if not p.get('disabled'))
+                      reason = (
+                          ("Stopped: remaining queries require review; this is NOT a complete scan. "
+                           if blocked else "Finished: accessible pages processed up to API limit. ")
+                          + f"Queries requiring review: {blocked}. "
+                          + 
+                          f"Disabled queries: {sum(bool(p.get('disabled')) for p in pages)}. "
+                          f"Queries reaching the API page limit: {capped}."
+                      )
+
+          if reason:
+              repository = os.environ["GITHUB_REPOSITORY"]
+              url = (
+                  f"https://api.github.com/repos/{repository}/actions/"
+                  "workflows/asic-moscow-m50-t21.yml/disable"
+              )
+              request = urllib.request.Request(
+                  url,
+                  method="PUT",
+                  headers={
+                      "Authorization":
+                          "Bearer " + os.environ["GH_TOKEN"],
+                      "Accept": "application/vnd.github+json",
+                      "User-Agent": "asic-full-scan",
+                  },
+              )
+              with urllib.request.urlopen(
+                  request, timeout=30
+              ) as response:
+                  print("Workflow disabled:", response.status)
+
+              print(reason)
+              with open(
+                  os.environ["GITHUB_STEP_SUMMARY"],
+                  "a",
+                  encoding="utf-8",
+              ) as output:
+                  output.write("\n" + reason + "\n")
+          PY
+
+      - name: Continue search automatically on GitHub
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          """Schedule one successor on GitHub, respecting the saved rolling quota."""
+          import base64
+          import json
+          import os
+          import time
+          import urllib.request
+          from datetime import datetime, timedelta, timezone
+          from pathlib import Path
+          BUDGET = int(os.environ['MOSCOW_CREDIT_LIMIT'])
+          
+          def next_run(state, started, now):
+              pages = state.get('pages', [])
+              if (not pages or state.get('paused') or all(x.get('done') or x.get('disabled') or x.get('blocked') for x in pages)
+                      or state.get('api_budget_reserved',0) >= BUDGET):
+                  return None
+              return max(started + 300, float(state.get('not_before',0)), now) + 5
+          
+          def main():
+              path = Path('results/moscow-m50-t21/asic-progress.json')
+              if not path.exists():
+                  raise RuntimeError('No saved checkpoint; automatic continuation refused.')
+              state = json.loads(path.read_text(encoding='utf-8'))
+              started = float(os.environ['ASIC_RUN_STARTED_AT'])
+              due = next_run(state, started, time.time())
+              if due is None:
+                  print('No successor: search complete or paused.')
+                  return
+              # Long Retry-After periods are split across jobs; the scanner still checks not_before.
+              wake = min(due, time.time() + 3600)
+              display = datetime.fromtimestamp(wake, timezone(timedelta(hours=5))).isoformat()
+              message = 'Automatic continuation: waiting on GitHub until ' + display
+              print(message, flush=True)
+              with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as stream:
+                  stream.write('\n## Automatic continuation\n\n' + message + '\n')
+              while time.time() < wake:
+                  time.sleep(min(30, wake-time.time()))
+              repo = os.environ['GITHUB_REPOSITORY']
+              workflow = 'asic-moscow-m50-t21.yml'
+              api = os.environ['GITHUB_API_URL'] + '/repos/' + repo
+              headers = {'Authorization':'Bearer ' + os.environ['GH_TOKEN'],
+                         'Accept':'application/vnd.github+json', 'User-Agent':'asic-search-continuation',
+                         'X-GitHub-Api-Version':'2022-11-28'}
+              def get_json(url):
+                  with urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=30) as response:
+                      return json.load(response)
+              # Respect a user's Disable workflow action while this job was waiting.
+              info = get_json(api + '/actions/workflows/' + workflow)
+              if info.get('state') != 'active':
+                  print('No successor: workflow disabled by user.')
+                  return
+              latest_file = get_json(api + '/contents/results/moscow-m50-t21/asic-progress.json?ref=main')
+              latest_state = json.loads(base64.b64decode(latest_file['content']).decode('utf-8'))
+              if next_run(latest_state, started, time.time()) is None:
+                  print('No successor: latest saved search complete or paused.')
+                  return
+              request = urllib.request.Request(
+                  api + '/actions/workflows/' + workflow + '/dispatches',
+                  method='POST', data=json.dumps({'ref':'main','inputs':{'credit_limit':str(BUDGET)}}).encode('utf-8'),
+                  headers={**headers, 'Content-Type':'application/json'})
+              # No blind retries after an uncertain POST outcome: avoid duplicate dispatches.
+              with urllib.request.urlopen(request, timeout=30) as response:
+                  if response.status != 204:
+                      raise RuntimeError('Unexpected dispatch status: ' + str(response.status))
+              print('Successor workflow dispatched on main.', flush=True)
+              with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as stream:
+                  stream.write('\nSuccessor workflow dispatched on main.\n')
+          
+          if __name__ == '__main__':
+              main()
+          PY
