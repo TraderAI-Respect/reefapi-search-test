@@ -2,10 +2,12 @@ name: ASIC full scan
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/asic-full-scan.yml'
+    inputs:
+      total_credit_limit:
+        description: 'Общий предел кредитов ЭТОГО поиска, включая уже зарезервированные 900. 1000 = ещё до 100. Проверьте баланс ReefAPI.'
+        type: number
+        required: true
+        default: 1000
 
 permissions:
   contents: write
@@ -19,6 +21,8 @@ jobs:
   scan:
     runs-on: ubuntu-24.04
     timeout-minutes: 110
+    env:
+      ASIC_TOTAL_CREDIT_LIMIT: ${{ inputs.total_credit_limit }}
 
     steps:
       - name: Start cloud cycle
@@ -118,7 +122,9 @@ jobs:
           QUERIES += list(CITY_TASKS)
           
           DISABLED_QUERIES = {'асики 20 штук','асики 50 штук','асики 100 штук'}
-          BUDGET = 900
+          BUDGET = int(os.environ.get('ASIC_TOTAL_CREDIT_LIMIT','900'))
+          if BUDGET < 2:
+              raise RuntimeError('total_credit_limit must be at least 2 credits.')
           COST = 2
           MAX_PAGE = 30
           CHECKPOINT = Path('results/asic-progress.json')
@@ -139,6 +145,13 @@ jobs:
               state.setdefault('api_successful_requests', 0)
               state.setdefault('api_charged_reported', 0)
               state['search_mode'] = 'personal_api_key'
+              state['credit_limit'] = BUDGET
+              # Preserve spent credits and pages; clear only this budget pause.
+              if (state.get('paused')
+                      and (state.get('last_error') or {}).get('code') == 'LOCAL_CREDIT_BUDGET'
+                      and state.get('api_budget_reserved',0) + COST <= BUDGET):
+                  state.pop('paused',None)
+                  state.pop('last_error',None)
               # Keep query indices, page positions, completion flags and credit counters intact.
               for query, entry in zip(state['queries'], state['pages']):
                   entry['disabled'] = query in DISABLED_QUERIES
@@ -282,7 +295,7 @@ jobs:
           def enforce_budget(state):
               if state['api_budget_reserved']+COST > BUDGET and not complete(state):
                   state['paused'] = True
-                  state['last_error'] = {'code':'LOCAL_CREDIT_BUDGET', 'message':'Local 900-credit reserve reached; search incomplete.'}
+                  state['last_error'] = {'code':'LOCAL_CREDIT_BUDGET', 'message':f'Local {BUDGET}-credit reserve reached; search incomplete.'}
           
           def summary(state):
               active = [entry for entry in state['pages'] if not entry.get('disabled')]
@@ -736,7 +749,7 @@ jobs:
                   if state.get('search_mode') == 'personal_api_key':
                       reserved = state.get('api_budget_reserved', 0)
                       succeeded = state.get('api_successful_requests', 0)
-                      text += ['', f'Личный API-ключ: успешных запросов {succeeded}. Консервативный резерв расхода: {reserved}/900 кредитов. '
+                      text += ['', f'Личный API-ключ: успешных запросов {succeeded}. Консервативный резерв расхода: {reserved}/{state.get("credit_limit",900)} кредитов. '
                                'Это счётчик workflow, не фактический баланс ReefAPI; ошибки тоже резервируются.']
                   if state.get('last_error'):
                       text += ['', 'Последняя ошибка поиска: ' + cell(json.dumps(state['last_error'], ensure_ascii=False))]
@@ -895,11 +908,12 @@ jobs:
           import urllib.request
           from datetime import datetime, timedelta, timezone
           from pathlib import Path
+          BUDGET = int(os.environ.get('ASIC_TOTAL_CREDIT_LIMIT','900'))
           
           def next_run(state, started, now):
               pages = state.get('pages', [])
               if (not pages or state.get('paused') or all(x.get('done') or x.get('disabled') or x.get('blocked') for x in pages)
-                      or state.get('api_budget_reserved',0) >= 900):
+                      or state.get('api_budget_reserved',0) >= BUDGET):
                   return None
               return max(started + 300, float(state.get('not_before',0)), now) + 5
           
@@ -943,7 +957,7 @@ jobs:
                   return
               request = urllib.request.Request(
                   api + '/actions/workflows/' + workflow + '/dispatches',
-                  method='POST', data=json.dumps({'ref':'main'}).encode('utf-8'),
+                  method='POST', data=json.dumps({'ref':'main','inputs':{'total_credit_limit':str(BUDGET)}}).encode('utf-8'),
                   headers={**headers, 'Content-Type':'application/json'})
               # No blind retries after an uncertain POST outcome: avoid duplicate dispatches.
               with urllib.request.urlopen(request, timeout=30) as response:
