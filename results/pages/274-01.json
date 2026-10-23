@@ -1,0 +1,63 @@
+{
+  "query": "Cheetah Miner | Иркутск",
+  "location": "Иркутск",
+  "page": 1,
+  "pagination": {
+    "page": 1,
+    "has_more": false
+  },
+  "ads": [
+    {
+      "ad_id": "3881651336",
+      "title": "Хешплата рабочая для асика Cheetah Miner S5",
+      "url": "https://www.avito.ru/irkutsk/tovary_dlya_kompyutera/heshplata_rabochaya_dlya_asika_cheetah_miner_s5_3881651336",
+      "price": 500,
+      "price_text": "500 ₽",
+      "price_per_unit": null,
+      "price_is_from": false,
+      "published_at": "2026-09-24T03:58:04Z",
+      "description_snippet": "Xeш платы (xэшплaта/xэш плaта) для Cheetah Miner S5, сняты c рaбoчей машинки — 500р.\n\nПрoверкa в oфиce. Hа достaвку дeлaю видеo-пpoвеpку с фиксaцией cерийников. Упaкoвывaю хopoшо в мнoгo cлoeв пупырки.\n\nПoсле пpoвeрки гаpантии нeт.\n\nДопoлнитeльнo ecт...",
+      "params_summary": null,
+      "city": "Иркутск"
+    },
+    {
+      "ad_id": "2199535804",
+      "title": "Ремонт любых asic или асиков и блоков питания",
+      "url": "https://www.avito.ru/irkutsk/predlozheniya_uslug/remont_lyubyh_asic_ili_asikov_i_blokov_pitaniya_2199535804",
+      "price": 200,
+      "price_text": "от 200 ₽",
+      "price_per_unit": null,
+      "price_is_from": true,
+      "published_at": "2026-10-20T14:30:15Z",
+      "description_snippet": "Ремонт Asic-майнеров и блоков питания Bitmain Antminer, Innosilicon, Pangolin Whatsminer, Dragonmint, Ebang Ebit, Alladin, Aixin, Cheetah и т. Д.\n\nПредлагаем широкий спектр услуг по работе с асиками, а именно:\nПрофилактика (продувка, чистка, замена т...",
+      "params_summary": null,
+      "city": "Иркутск"
+    },
+    {
+      "ad_id": "2426621838",
+      "title": "Ремонт asic-майнеров и блоков питания в Иркутске",
+      "url": "https://www.avito.ru/irkutsk/predlozheniya_uslug/remont_asic-maynerov_i_blokov_pitaniya_v_irkutske_2426621838",
+      "price": 200,
+      "price_text": "от 200 ₽",
+      "price_per_unit": null,
+      "price_is_from": true,
+      "published_at": "2026-10-11T09:22:33Z",
+      "description_snippet": "Осуществляем ремонт майнингового оборудования: Antminer, Innosilicon, Whatsminer, Dragonmint, Ebit, Alladin, Cheetah и т. Д.\n\nПредлагаем широкий спектр услуг по работе с асиками, а именно:\n-Профилактика (чистка, замена термопасты, продувка).\n-Устране...",
+      "params_summary": null,
+      "city": "Иркутск"
+    },
+    {
+      "ad_id": "4730390188",
+      "title": "Тестер хэш плат майнеров universal tester miner",
+      "url": "https://www.avito.ru/irkutsk/tovary_dlya_kompyutera/tester_hesh_plat_maynerov_universal_tester_miner_4730390188",
+      "price": 7990,
+      "price_text": "7 990 ₽",
+      "price_per_unit": null,
+      "price_is_from": false,
+      "published_at": "2026-10-21T01:41:41Z",
+      "description_snippet": "Продам тестер хэш плат для майнеров, почти новый, особо не использовался.\n\nВерсия Innosilicon, Aladdin, Whatsminer, Cheetah,\nAixin позволяет тестировать:\nInnosilicon (опрос чипов + отображение чипов, которые не отвечают на запрос):\nТ2Т разных модифик...",
+      "params_summary": null,
+      "city": "Иркутск"
+    }
+  ]
+}

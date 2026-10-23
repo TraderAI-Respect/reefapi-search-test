@@ -1,0 +1,37 @@
+{
+  "query": "Aladdin Miner | Уфа",
+  "location": "Уфа",
+  "page": 1,
+  "pagination": {
+    "page": 1,
+    "has_more": false
+  },
+  "ads": [
+    {
+      "ad_id": "8317271790",
+      "title": "Скупка Асиков Майнеров Antminer Whatsminer Avalon",
+      "url": "https://www.avito.ru/ufa/predlozheniya_uslug/skupka_asikov_maynerov_antminer_whatsminer_avalon_8317271790",
+      "price": 777,
+      "price_text": "от 777 ₽",
+      "price_per_unit": null,
+      "price_is_from": true,
+      "published_at": "2026-10-05T06:15:45Z",
+      "description_snippet": "Выкуп Асиков И Майнеров В Любом Состоянии.\n\nВыкупаем Асик-майнеры по всей России — рабочие, неисправные, после ремонта, с ошибками, некомплектные и устаревшие модели.\n\nОсобенно интересуют крупные партии оборудования. Выкупаем майнинг-оборудование со ...",
+      "params_summary": null,
+      "city": "Уфа"
+    },
+    {
+      "ad_id": "2134863747",
+      "title": "Ремонт майнинг оборудования (Асиков Asic)",
+      "url": "https://www.avito.ru/ufa/predlozheniya_uslug/remont_mayning_oborudovaniya_asikov_asic_2134863747",
+      "price": 1729,
+      "price_text": "от 1 729 ₽",
+      "price_per_unit": null,
+      "price_is_from": true,
+      "published_at": "2026-10-22T23:07:07Z",
+      "description_snippet": "Ремонт Asic-майнеров / хэш-плат.\n\nГарантия на работы: 1–6 мес. (в зависимости от серии/объёма).\nДиагностика + ремонт (сразу говорю стоимость, при необходимости: цена чипа отдельно).\nBitmain / Whatsminer / Avalon + (Iceriver, Hammer/Bluestar и др.).\nК...",
+      "params_summary": null,
+      "city": "Уфа"
+    }
+  ]
+}

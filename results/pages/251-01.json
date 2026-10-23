@@ -1,0 +1,24 @@
+{
+  "query": "Aiden Miner | Ангарск",
+  "location": "Ангарск",
+  "page": 1,
+  "pagination": {
+    "page": 1,
+    "has_more": false
+  },
+  "ads": [
+    {
+      "ad_id": "8338694986",
+      "title": "Скупка Асиков Майнеров Antminer Whatsminer Avalon",
+      "url": "https://www.avito.ru/angarsk/predlozheniya_uslug/skupka_asikov_maynerov_antminer_whatsminer_avalon_8338694986",
+      "price": null,
+      "price_text": "Цена договорная",
+      "price_per_unit": null,
+      "price_is_from": false,
+      "published_at": "2026-10-12T17:39:08Z",
+      "description_snippet": "Выкуп Асиков И Майнеров В Любом Состоянии От 30 Штук.\n\nВыкупаем Асик-майнеры по всей России — рабочие, неисправные, после ремонта, с ошибками, некомплектные и устаревшие модели.\n\nОсобенно интересуют крупные партии оборудования. Выкупаем майнинг-обору...",
+      "params_summary": null,
+      "city": "Ангарск"
+    }
+  ]
+}

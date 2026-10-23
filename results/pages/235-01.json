@@ -1,0 +1,63 @@
+{
+  "query": "Hummer Miner | Иркутск",
+  "location": "Иркутск",
+  "page": 1,
+  "pagination": {
+    "page": 1,
+    "has_more": false
+  },
+  "ads": [
+    {
+      "ad_id": "8382406777",
+      "title": "Контрольная плата кпу Hammer D10+ 4.9G",
+      "url": "https://www.avito.ru/irkutsk/tovary_dlya_kompyutera/kontrolnaya_plata_kpu_hammer_d10_4.9g_8382406777",
+      "price": 4000,
+      "price_text": "4 000 ₽",
+      "price_per_unit": null,
+      "price_is_from": false,
+      "published_at": "2026-10-19T15:18:01Z",
+      "description_snippet": "Контрольная плата управления (контролька, кпу) L3B L004_ C на Hammer (Hummer, Хаммер) D10+ 4900M, снята с рабочей машинки. Возможно подойдет и на Bluestar L1.\n\nДополнительно есть корпус (2000₽), хешплаты (5000₽), блок питания (3000₽) и оригинальные к...",
+      "params_summary": null,
+      "city": "Иркутск"
+    },
+    {
+      "ad_id": "2585045146",
+      "title": "Ремонт asic майнеров,бп блоки питания,кпу,платы",
+      "url": "https://www.avito.ru/irkutsk/predlozheniya_uslug/remont_asic_maynerovbp_bloki_pitaniyakpuplaty_2585045146",
+      "price": 500,
+      "price_text": "от 500 ₽",
+      "price_per_unit": null,
+      "price_is_from": true,
+      "published_at": "2026-10-13T11:16:43Z",
+      "description_snippet": "Произведём ремонт майнинг оборудования любой сложности ×быстро, качественно и не дорого.\nWhatsminer m21, m20, m31, m60, m63 m32, m30, m50, m61, m50s, m53.\nAvalon 1066,1166,1126,1246.\nAntminer T15-S15 T17-s17pro.\nS9-L3, strong u, A4, T2T.\nS19-L7 -L9-K...",
+      "params_summary": null,
+      "city": "Иркутск"
+    },
+    {
+      "ad_id": "8484905023",
+      "title": "Хешплаты Hammer D10+, Bluestar L1 4.9G",
+      "url": "https://www.avito.ru/irkutsk/tovary_dlya_kompyutera/heshplaty_hammer_d10_bluestar_l1_4.9g_8484905023",
+      "price": 5000,
+      "price_text": "5 000 ₽",
+      "price_per_unit": null,
+      "price_is_from": false,
+      "published_at": "2026-10-19T15:20:28Z",
+      "description_snippet": "Хеш платы (хэшплаты / хэш платы) на Hammer (Hummer, Хаммер) D10+ 4900M и Bluestar L1, сняты с рабочей машинки.\n\nДополнительно есть корпус (2000₽), кпу (4000₽), блок питания (3000₽) и оригинальные кулеры (500р).\n\nПри заказе через Авито выставляю цену ...",
+      "params_summary": null,
+      "city": "Иркутск"
+    },
+    {
+      "ad_id": "2441558440",
+      "title": "Трафареты для asic чипов прямого нагрева",
+      "url": "https://www.avito.ru/irkutsk/remont_i_stroitelstvo/trafarety_dlya_asic_chipov_pryamogo_nagreva_2441558440",
+      "price": 2635,
+      "price_text": "2 635 ₽",
+      "price_per_unit": null,
+      "price_is_from": false,
+      "published_at": "2026-10-06T16:49:34Z",
+      "description_snippet": "Трафареты прямого нагрева с позиционной ячейкой для ребола Asic чипов/микросхем майнеров. Стандартное количество ячеек на трафарете — 2, доступны исполнения на 4, 6 и 10 микросхем.\n\nИзделие представляет из себя несколько слоёв специализированной стал...",
+      "params_summary": null,
+      "city": "Иркутск"
+    }
+  ]
+}

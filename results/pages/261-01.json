@@ -1,0 +1,37 @@
+{
+  "query": "Aladdin Miner | Иркутск",
+  "location": "Иркутск",
+  "page": 1,
+  "pagination": {
+    "page": 1,
+    "has_more": false
+  },
+  "ads": [
+    {
+      "ad_id": "4730390188",
+      "title": "Тестер хэш плат майнеров universal tester miner",
+      "url": "https://www.avito.ru/irkutsk/tovary_dlya_kompyutera/tester_hesh_plat_maynerov_universal_tester_miner_4730390188",
+      "price": 7990,
+      "price_text": "7 990 ₽",
+      "price_per_unit": null,
+      "price_is_from": false,
+      "published_at": "2026-10-21T01:41:41Z",
+      "description_snippet": "Продам тестер хэш плат для майнеров, почти новый, особо не использовался.\n\nВерсия Innosilicon, Aladdin, Whatsminer, Cheetah,\nAixin позволяет тестировать:\nInnosilicon (опрос чипов + отображение чипов, которые не отвечают на запрос):\nТ2Т разных модифик...",
+      "params_summary": null,
+      "city": "Иркутск"
+    },
+    {
+      "ad_id": "2211245818",
+      "title": "Ремонт майнинг-техники, телефонов, компьютеров",
+      "url": "https://www.avito.ru/irkutsk/predlozheniya_uslug/remont_mayning-tehniki_telefonov_kompyuterov_2211245818",
+      "price": 150,
+      "price_text": "от 150 ₽",
+      "price_per_unit": null,
+      "price_is_from": true,
+      "published_at": "2026-10-21T14:16:47Z",
+      "description_snippet": "Здравствуйте!\nРемонтируем майнинг обoрудoвание в Иркутске.\n\nСроки ремонта минимальные в зависимости от сложности!\n\nПо стоимости, срокам и прочему пишите! Номер телефона дам реально заинтересованному.\n\nАдрес: Иркутск, ул. 2я Железнодорожная.\nРабочее в...",
+      "params_summary": null,
+      "city": "Иркутск"
+    }
+  ]
+}
