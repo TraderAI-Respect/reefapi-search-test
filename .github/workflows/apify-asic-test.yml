@@ -32,7 +32,29 @@ jobs:
         with:
           ref: main
 
-      - name: Test Apify search and three full descriptions
+      - name: Reserve a new run-specific directory
+        id: prepare
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import os
+          import re
+          from pathlib import Path
+          run_id = os.environ['GITHUB_RUN_ID']
+          if not re.fullmatch(r'[0-9]+',run_id) or os.environ.get('GITHUB_RUN_ATTEMPT','1') != '1':
+              raise SystemExit('Invalid run ID or rerun attempt: no Actor request is allowed.')
+          folder = Path('results/apify-test/runs')/run_id
+          try:
+              folder.mkdir(parents=True, exist_ok=False)
+          except FileExistsError:
+              raise SystemExit('Run folder already exists: old files are preserved; no Actor request is allowed.')
+          (folder/'created.json').write_text('{"new_run_folder":true}\n',encoding='utf-8')
+          with open(os.environ['GITHUB_OUTPUT'],'a',encoding='utf-8') as stream:
+              stream.write('created=true\n')
+          PY
+
+      - name: Test bounded Apify search and filtered details
+        if: steps.prepare.outputs.created == 'true'
         env:
           APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
           ASIC_QUERY: ${{ inputs.query }}
@@ -40,7 +62,7 @@ jobs:
         shell: bash
         run: |
           python3 - <<'PY'
-          """Small cloud-only Apify test. Never request an Avito URL from GitHub."""
+          """Bounded cloud-only Apify test; never request Avito from GitHub."""
           import json
           import os
           import re
@@ -51,165 +73,474 @@ jobs:
           import urllib.request
           from pathlib import Path
           
-          ROOT=Path('results/apify-test')
-          ACTOR='s-r~avito-scraper'
-          BASE='https://api.apify.com/v2'
+          ROOT = Path('results/apify-test')
+          ACTOR = 's-r~avito-scraper'
+          BASE = 'https://api.apify.com/v2'
+          MAX_RESPONSE_BYTES = 2 * 1024 * 1024
+          
+          BRAND_ALIASES = {
+              'антмайнер':'antminer', 'антминер':'antminer', 'антмайнeр':'antminer',
+              'битмайн':'bitmain', 'битмейн':'bitmain',
+              'ватсмайнер':'whatsminer', 'вотсмайнер':'whatsminer', 'вацмайнер':'whatsminer',
+              'микробт':'microbt', 'инносиликон':'innosilicon', 'иносиликон':'innosilicon',
+              'инносилликон':'innosilicon', 'авалон':'avalon', 'канаан':'canaan',
+              'битфури':'bitfury', 'битфьюри':'bitfury', 'эбит':'ebit',
+              'хаммер':'hummer', 'айден':'aiden', 'аладдин':'aladdin', 'чита':'cheetah',
+              'про':'pro', 'мини':'mini', 'турбо':'turbo', 'гидро':'hydro',
+              'хр':'xp', 'хп':'xp',
+          }
+          MODEL_LETTERS = str.maketrans({'с':'s','т':'t','л':'l','м':'m','а':'a','д':'d',
+              'з':'z','б':'b','в':'b','н':'h','к':'k','е':'e','и':'i','ж':'j','ф':'f','х':'x'})
+          
+          def normalize_models(text):
+              """Normalize only brands/model-shaped tokens, preserving Russian sales text."""
+              text = re.sub(r'\b([sсtтmмlлdдaаeеbв])\s+(\d{1,4})', r'\1\2', str(text), flags=re.I)
+              def word(match):
+                  value = match.group().lower()
+                  if value in BRAND_ALIASES:
+                      return BRAND_ALIASES[value]
+                  for alias, brand in BRAND_ALIASES.items():
+                      if brand in ('pro','mini','turbo','hydro','xp'):
+                          continue
+                      if value.startswith(alias) and re.match(r'[a-zа-яё]?\d', value[len(alias):]):
+                          value = brand + ' ' + value[len(alias):]
+                          break
+                  chunks = value.split(' ')
+                  result = []
+                  for chunk in chunks:
+                      if re.match(r'^[a-zа-яё]{1,4}\d', chunk):
+                          chunk = re.sub(r'про(?=\+?$)', 'pro', chunk)
+                          chunk = re.sub(r'(?:хр|хп)(?=\+?$)', 'xp', chunk)
+                          chunk = re.sub(r'гидро$', 'hydro', chunk)
+                          chunk = chunk.translate(MODEL_LETTERS)
+                      result.append(chunk)
+                  return ' '.join(result)
+              text = re.sub(r'[a-zа-яё][a-zа-яё0-9+/-]*', word, str(text), flags=re.I)
+              text = re.sub(r'\b(antminer|bitmain|whatsminer|microbt|innosilicon|avalon|canaan|bitfury|ebit)(?=[a-z]?\d)', r'\1 ', text, flags=re.I)
+              text = re.sub(r'(?<=pro)\s+с\b', ' s', text, flags=re.I)
+              text = re.sub(r'\b(s19)\s+([кkиieеj])(?=\s|$)', lambda m:m[1]+m[2].translate(MODEL_LETTERS), text, flags=re.I)
+              text = re.sub(r'(?<![a-zа-я])[xх]\s*[pрп](?![a-zа-я])', 'xp', text, flags=re.I)
+              return text
+          
+          TOKEN = re.compile(
+              r'\b(?:s19(?:\s*[jkie])?(?:\s*pro\+?)?(?:\s*xp\+?)?(?:\s*(?:hydro|hyd))?|s17(?:\s*pro|\+|e)?|s9[a-z]*|s7(?:-f1)?|s5|'
+              r't21|t19|t17[a-z+]*|t15|t9\+|l3\+{0,2}|d3|z9\s*mini|m\d+[a-z+]*|'
+              r'a1[01](?:\s*pro)?|t3s|t3h|t3\+(?:\s*pro)?|t2\s*turbo|'
+              r't2tt?i|t2tsr|t2thf|t2thm|t2tz|t2ts|t2t(?:\s*th\+)?|'
+              r'1126(?:\s*pro\s*s)?|1146(?:\s*pro)?|1066(?:\s*pro)?|1046|'
+              r'a?921|a?920h?|841|a?851|a?852|e10|e9(?:\s*miner\+)?|'
+              r'b8|bt200|h7\s*pro|a1|f1)(?![a-z0-9+])', re.I)
+          BRANDED = re.compile(r'\b(?:antminer|whatsminer|microbt|innosilicon|avalon|canaan|ebit|bitfury|hummer|aiden|aladdin|cheetah)\b', re.I)
+          PARTS = re.compile(r'х[еэ]ш.?плат|контрольн|контроллер|конвертер|переходник|эмулятор|\bкпу\b|\bбп\b|блок[аи]?\s+питани|корпус|вентил|кулер|шлейф|кабел|коса|чип|водоблок|жидкост|ванна|стойк|стеллаж|трафарет|тестер|контейнер|фланец|термопаст|разъ[её]м|коннектор|планка|шумбокс', re.I)
+          BUYER = re.compile(r'выкуп|скупк|куплю|покупаем|выкупаем|при[её]м|утилизац|ремонт|хостинг|размещен|настройка|прошивка', re.I)
+          ACCESSORY = re.compile(r'фильтр|filter|памят|memory|микросхем|комплектующ|запчаст|аксессуар|accessor|пылезащит|воздуховод|шумоглуш|ddr|eeprom|nand', re.I)
+          UNITS = r'(?:шт(?:ук(?:и|а)?)?\.?|устройств\w*|аппарат\w*|асик\w*|майнер\w*|комплект\w*)'
+          QTY = re.compile(r'(?<![\d.,])(?P<lo>\d{1,5})(?:\s*[–—-]\s*(?P<hi>\d{1,5}))?\s*' + UNITS, re.I)
+          RATE = re.compile(r'(\d+(?:[.,]\d+)?)(?:\s*[/–-]\s*(\d+(?:[.,]\d+)?))?\s*(?:th|t[hx]?|тх|т|gh|g|г)(?:\b|/)', re.I)
+          PRICE = re.compile(r'(\d[\d\s.,]*\s*(?:₽|руб\.?|р\.))\s*(?:/\s*(?:шт\.?|комплект)|за\s+(?:1\s*)?(?:шт\w*|комплект))', re.I)
+          
+          def identify(line):
+              line = normalize_models(line)
+              matches = list(TOKEN.finditer(line))
+              if not matches:
+                  if re.search(r'\baladdin\s*miner\b', line, re.I):
+                      return [{'model': 'Aladdin Miner', 'minimum': 20, 'valid': True}]
+                  return []
+              found = []
+              for match in matches:
+                  token = re.sub(r'\s+', '', match.group().lower())
+                  valid, minimum, required, name = True, 20, None, None
+                  if token == 'm50':
+                      minimum, name = 10, 'Whatsminer M50'
+                  elif token == 't21':
+                      minimum, name = 20, 'Antminer T21'
+                  elif token in ('a10', 'a10pro', 'a11', 'a11pro'):
+                      minimum, name = 1, 'Innosilicon ' + token.upper().replace('PRO', ' Pro')
+                      if re.search(r'\b(?:avalon|canaan)\b', line, re.I):
+                          valid = False
+                  elif token.startswith('s19'):
+                      name, minimum = 'Antminer ' + match.group().upper(), 15
+                      valid = not ('xp' in token or 'hyd' in token)
+                      rate = RATE.search(line[match.end():match.end()+35])
+                      if rate:
+                          name += ' ' + '/'.join(x for x in rate.groups() if x) + 'T'
+                  elif token in ('s17','s17pro','s17+','s17e','s9','s9k','s7','s7-f1','s5','t19','t17','t15','t9+','l3+','l3++','z9mini'):
+                      name = 'Antminer ' + token.upper().replace('PRO', ' Pro').replace('Z9MINI', 'Z9 Mini')
+                  elif token == 'd3':
+                      name, required = 'Antminer D3', {17,19.3}
+                  elif token in ('m31s','m20s','m21s'):
+                      name = 'Whatsminer ' + token.upper()
+                      required = {'m31s':{74,76},'m20s':{65,68},'m21s':{52,54,56}}[token]
+                  elif token in ('t3s','t3h','t3+','t2t','t2turbo','t2tz','t2ti','t2tti','t2ts','t2tsr','t2thf','t2thm','t2tth+'):
+                      name = 'Innosilicon ' + token.upper().replace('T2TURBO','T2 Turbo').replace('T2TTH+','T2T TH+')
+                      required = {'t3s':{39},'t3h':{50},'t3+':set(range(50,58)), 't2t':{29,32},'t2tz':{30},'t2tti':{25},'t2tsr':{25},'t2thf':{27},'t2tth+':{37}}.get(token)
+                  elif token in ('1126pros','1146pro','1066pro','1046','921','a921','920h','a920h','841','851','a851','852','a852'):
+                      name = 'Avalon ' + token.upper().replace('PROS',' Pro S').replace('PRO',' Pro')
+                      if token[0].isdigit() and not re.search(r'\b(?:avalon|canaan)\s*$', line[:match.start()], re.I):
+                          valid = False
+                      required = {'1126pros':{68},'1146pro':{63},'1066pro':{55}}.get(token)
+                  elif token in ('e10','e9miner+','b8','bt200','h7pro','a1','f1'):
+                      name = {'e10':'Ebit E10','e9miner+':'Ebit E9 Miner+','b8':'Bitfury B8','bt200':'Bitfury BT200','h7pro':'Hummer Miner H7 Pro','a1':'Aiden Miner A1','f1':'Cheetah Miner F1'}[token]
+                      if token in ('b8', 'bt200'):
+                          minimum = 5
+                      required = {'e10':{18},'b8':{50}}.get(token)
+                      brand = name.split()[0]
+                      if not re.search(r'\b' + brand + r'\b', line, re.I):
+                          valid = False
+                  else:
+                      valid, name = False, token.upper()
+                  if required:
+                      rate = RATE.search(line[match.end():match.end()+35])
+                      if rate:
+                          values = [float(x.replace(',','.')) for x in rate.groups() if x]
+                          valid = valid and all(v in required for v in values)
+                          name += ' ' + '/'.join(f'{v:g}' for v in values) + ('G' if token == 'd3' else 'T')
+                      else:
+                          valid = False
+                  found.append({'model':name,'minimum':minimum,'valid':valid})
+              return found
           
           def run_parameters(items):
               return {'timeout':'120','waitForFinish':'60','maxTotalChargeUsd':'0.10',
                       'maxItems':str(items),'restartOnError':'false'}
           
+          def sanitize(value, token=''):
+              """Recursively redact credentials without altering diagnostic booleans."""
+              if isinstance(value, dict):
+                  return {sanitize(str(k), token): ('[REDACTED]' if re.search(
+                      r'auth|cookie|password|secret|token|api.?key|headers|session|credential|signature|^sig$', str(k), re.I)
+                      else sanitize(v, token)) for k, v in value.items()}
+              if isinstance(value, list):
+                  return [sanitize(v, token) for v in value]
+              if not isinstance(value, str):
+                  return value
+              if token:
+                  value = value.replace(token, '[REDACTED]')
+              value = re.sub(r'apify_(?:api|ui)_[A-Za-z0-9_-]+|github_pat_[A-Za-z0-9_]+|gh[pousr]_[A-Za-z0-9_]{20,}', '[REDACTED]', value)
+              def clean_url(match):
+                  # Drop every query/fragment, not only known credential parameter names.
+                  # This also covers encoded keys, SAS sig, OAuth fragments and new formats.
+                  try:
+                      url = urllib.parse.urlsplit(match.group())
+                      authority = url.netloc.rsplit('@',1)[-1]
+                      return urllib.parse.urlunsplit((url.scheme, authority, url.path,
+                          '[REDACTED]' if url.query else '', '[REDACTED]' if url.fragment else ''))
+                  except ValueError:
+                      return '[REDACTED invalid URL]'
+              value = re.sub(r'https?://[^\s\x22\x27<>]+', clean_url, value, flags=re.I)
+              value = re.sub(r'(?im)^.*(?:authorization|cookie|api[-_]?key|access[-_]?token|refresh[-_]?token|client[-_]?secret)\s*[\x22\x27]?\s*[:=].*$', '[REDACTED credential header]', value)
+              value = re.sub(r'(?i)\b(?:Bearer|Basic)\s+[A-Za-z0-9+/=_-]{8,}', '[REDACTED credential]', value)
+              return value
+          
+          def save(path, data, token=''):
+              path.parent.mkdir(parents=True, exist_ok=True)
+              with path.open('x', encoding='utf-8') as stream:
+                  json.dump(sanitize(data, token), stream, ensure_ascii=False, indent=2)
+                  stream.write('\n')
+          
+          def save_text(path, text, token=''):
+              path.parent.mkdir(parents=True, exist_ok=True)
+              with path.open('x', encoding='utf-8') as stream:
+                  stream.write(sanitize(text, token))
+          
           def make_request(token, method, path, data=None, params=None):
-              if not path.startswith('/'):
-                  raise ValueError('Invalid API path')
-              url=BASE+path
+              allowed_get = re.fullmatch(r'/(?:actor-runs/[A-Za-z0-9]+|datasets/[A-Za-z0-9]+/items|logs/[A-Za-z0-9]+|key-value-stores/[A-Za-z0-9]+/records/(?:INPUT|OUTPUT|summary|errors))', path)
+              if not ((method == 'GET' and allowed_get) or
+                      (method == 'POST' and path == '/actors/'+ACTOR+'/runs')):
+                  raise ValueError('Unapproved Apify endpoint or method')
+              url = BASE+path
               if params:
-                  url+='?'+urllib.parse.urlencode(params)
-              return urllib.request.Request(url,method=method,
-                  data=json.dumps(data,ensure_ascii=False).encode('utf-8') if data is not None else None,
+                  url += '?'+urllib.parse.urlencode(params)
+              return urllib.request.Request(url, method=method,
+                  data=json.dumps(data, ensure_ascii=False).encode('utf-8') if data is not None else None,
                   headers={'Authorization':'Bearer '+token,'Content-Type':'application/json',
-                           'Accept':'application/json','User-Agent':'asic-apify-github-test'})
+                           'Accept':'application/json, text/plain','User-Agent':'asic-apify-github-test'})
           
           class NoRedirect(urllib.request.HTTPRedirectHandler):
-              def redirect_request(self,request,fp,code,msg,headers,newurl):
+              def redirect_request(self, request, fp, code, msg, headers, newurl):
                   return None
           
-          def api(token,method,path,data=None,params=None):
-              request=make_request(token,method,path,data,params)
+          class ApiError(RuntimeError):
+              def __init__(self, message, status=None):
+                  super().__init__(message)
+                  self.status = status
+          
+          def api(token, method, path, data=None, params=None, text=False):
+              request = make_request(token, method, path, data, params)
               try:
-                  with urllib.request.build_opener(NoRedirect()).open(request,timeout=80) as response:
-                      return json.load(response)
+                  with urllib.request.build_opener(NoRedirect()).open(request, timeout=80) as response:
+                      raw = response.read(MAX_RESPONSE_BYTES+1)
+                  if len(raw) > MAX_RESPONSE_BYTES:
+                      raise ApiError('Apify response exceeds diagnostic size limit; not saved as complete.')
+                  return raw.decode('utf-8') if text else json.loads(raw)
               except urllib.error.HTTPError as error:
-                  code='API_ERROR'
-                  try:
-                      envelope=json.load(error)
-                      value=(envelope.get('error') or {}).get('type','')
-                      if re.fullmatch(r'[a-z0-9-]{1,100}',value):
-                          code=value
-                  except Exception:
-                      pass
-                  raise RuntimeError(f'Apify HTTP {error.code}: {code}. No automatic retry.') from None
+                  raise ApiError(f'Apify HTTP {error.code}; request not automatically retried.', error.code) from None
+              except ApiError:
+                  raise
               except Exception:
-                  raise RuntimeError('Apify connection failed; request was not automatically retried.') from None
+                  raise ApiError('Apify response unavailable or invalid; request not automatically retried.') from None
+          
+          def city_info(row):
+              raw = {key:row[key] for key in ('city','location','region','address') if key in row}
+              def label(value):
+                  if isinstance(value, dict):
+                      value = value.get('name') or value.get('title') or ''
+                  if not isinstance(value, str):
+                      return ''
+                  value = re.sub(r'^\s*(?:г\.|город)\s*', '', value.strip(), flags=re.I)
+                  if not value or re.search(r'\d|[,;\n]|област|округ|район|республик|край\b|улиц|проспект|шоссе|переул|ул\.', value, re.I):
+                      return ''
+                  return value
+              def explicit(value):
+                  if not isinstance(value, dict):
+                      return ''
+                  for key in ('city','locality','town','settlement'):
+                      found = label(value.get(key))
+                      if found:
+                          return found
+                  if str(value.get('type','')).lower() in ('city','town','город','г'):
+                      found = label(value)
+                      if found:
+                          return found
+                  for key in ('location','region','address'):
+                      found = explicit(value.get(key))
+                      if found:
+                          return found
+                  return ''
+              found = label(row.get('city'))
+              if found:
+                  return found, 'city', raw
+              for key in ('location','region','address'):
+                  value = row.get(key)
+                  found = explicit(value)
+                  if not found and isinstance(value, str):
+                      match = re.search(r'(?:^|,\s*)(?:г\.|город)\s+([^,;\n]+)', value, re.I)
+                      if match:
+                          found = label(match.group(1))
+                      elif value.strip().casefold() in ('москва','санкт-петербург','севастополь'):
+                          found = value.strip()
+                  if found:
+                      return found, key, raw
+              return 'не указан', 'unknown', raw
           
           def normalize(row):
-              if not isinstance(row,dict) or row.get('blocked') or row.get('found') is False:
+              if not isinstance(row, dict) or row.get('blocked') or row.get('found') is False:
                   return None
-              url=str(row.get('url') or '')
-              part=urllib.parse.urlsplit(url)
-              match=re.search(r'_(\d+)$',part.path)
-              if part.scheme!='https' or not ((part.hostname or '')=='avito.ru' or
-                                             (part.hostname or '').endswith('.avito.ru')) or not match:
+              try:
+                  part = urllib.parse.urlsplit(str(row.get('url') or ''))
+                  match = re.search(r'_(\d+)$', part.path)
+                  if (part.scheme != 'https' or part.username or part.password or
+                          not ((part.hostname or '') == 'avito.ru' or (part.hostname or '').endswith('.avito.ru')) or not match):
+                      return None
+              except ValueError:
                   return None
-              aid=str(row.get('listing_id') or row.get('id') or match.group(1))
-              if aid!=match.group(1):
+              aid = str(row.get('listing_id') or row.get('id') or match.group(1))
+              if aid != match.group(1):
                   return None
-              city=row.get('city') or row.get('location') or ''
-              if isinstance(city,dict):
-                  city=city.get('city') or city.get('name') or ''
-              price=row.get('price')
+              city, city_source, raw_location = city_info(row)
+              price = row.get('price')
               return {'ad_id':aid,'title':str(row.get('title') or row.get('name') or ''),
                       'url':part._replace(query='',fragment='').geturl(),
-                      'city':str(city),'price':price,
-                      'price_text':str(row.get('price_text') or row.get('priceText') or
-                                       (str(price)+' ₽' if price is not None else 'не указана')),
+                      'city':city,'city_source':city_source,'location_raw':raw_location,'price':price,
+                      'price_text':str(row.get('price_text') or row.get('priceText') or (str(price)+' ₽' if price is not None else 'не указана')),
                       'description_snippet':str(row.get('description') or ''),
                       'params_summary':str(row.get('condition') or '')}
           
-          def candidates(rows,limit):
-              result={}
-              for item in rows:
-                  item=normalize(item)
+          def candidates(rows, limit):
+              result = {}
+              for row in rows:
+                  item = normalize(row)
                   if item:
-                      result.setdefault(item['ad_id'],item)
+                      result.setdefault(item['ad_id'], item)
               return list(result.values())[:limit]
           
-          def merge_detail(search,detail):
-              if search['ad_id']!=detail['ad_id']:
+          def model_key(token):
+              token = re.sub(r'\s+', '', token.casefold())
+              return 's19' if token.startswith('s19') else token
+          
+          def query_scope(query):
+              text = normalize_models(query)
+              tokens = list(TOKEN.finditer(text))
+              found = identify(text)
+              if len(tokens) != 1 or len(found) != 1 or not found[0]['valid']:
+                  raise RuntimeError('Query must identify one supported model; ambiguous/unsupported query was not sent.')
+              return model_key(tokens[0].group())
+          
+          def title_decision(title, query):
+              scope = query_scope(query)
+              text = normalize_models(title)
+              goods = re.sub(r'на\s+запчасти', '', text, flags=re.I)
+              parts_title = re.sub(r'\(\s*\d+\s+чип(?:а|ов)?\s*\)', '', text, flags=re.I)
+              if BUYER.search(text) or PARTS.search(parts_title) or ACCESSORY.search(goods):
+                  return 'reject', 'accessory_or_service'
+              if re.search(r'\bxp\b|\bhyd(?:ro)?\b|гидро|s19\w*(?:xp|hydro)', text, re.I):
+                  return 'reject', 'excluded_xp_or_hydro'
+              known = {model_key(m.group()) for m in TOKEN.finditer(text)}
+              shaped = {model_key(m.group()) for m in re.finditer(r'\b[a-z]{1,4}\d{1,5}[a-z0-9+]*\b', text, re.I)}
+              keys = known | shaped
+              if scope in keys and keys != {scope}:
+                  return 'review', 'mixed_models_in_title'
+              if scope not in keys:
+                  return ('reject','different_model') if keys else ('review','model_not_clear_in_title')
+              if not any(item['valid'] for item in identify(text)):
+                  return 'review', 'variant_not_clear_in_title'
+              return 'pass', 'model_matches_query'
+          
+          def select_candidates(rows, query, limit=3):
+              selected, decisions, seen = [], [], set()
+              for row in rows:
+                  item = normalize(row)
+                  if not item:
+                      decisions.append({'decision':'reject','reason':'blocked_not_found_or_invalid_identity',
+                                        'id':row.get('id') if isinstance(row,dict) else None})
+                      continue
+                  if item['ad_id'] in seen:
+                      decisions.append({'ad_id':item['ad_id'],'decision':'reject','reason':'duplicate_id'})
+                      continue
+                  seen.add(item['ad_id'])
+                  decision, reason = title_decision(item['title'], query)
+                  decisions.append({'ad_id':item['ad_id'],'title':item['title'],'city':item['city'],
+                                    'url':item['url'],'decision':decision,'reason':reason})
+                  if decision == 'pass' and len(selected) < limit:
+                      selected.append(item)
+              return selected, decisions
+          
+          def merge_detail(search, detail):
+              if search['ad_id'] != detail['ad_id']:
                   raise ValueError('Detail ID differs from search result')
-              return {k:(detail.get(k) if detail.get(k) not in (None,'') else v) for k,v in search.items()}
+              merged = dict(search)
+              for key, value in detail.items():
+                  if value not in (None, '', 'не указан'):
+                      merged[key] = value
+              if detail['city'] == 'не указан':
+                  merged['city_source'] = search['city_source']
+              merged['location_raw'] = {'search':search['location_raw'],'details':detail['location_raw']}
+              return merged
           
-          def save(path,data):
-              path.parent.mkdir(parents=True,exist_ok=True)
-              path.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
-          
-          def safe_rows(rows,token):
-              return [{k:v.replace(token,'[REDACTED]') if isinstance(v,str) else v for k,v in row.items()} for row in rows]
-          
-          def run_actor(token,body,limit,stage,folder):
-              journal=folder/(stage+'-run.json')
-              if journal.exists():
-                  state=json.loads(journal.read_text(encoding='utf-8'))
-                  if not state.get('id'):
-                      raise RuntimeError('Earlier start outcome is unknown. Inspect Apify Console before retrying.')
-                  run=api(token,'GET','/actor-runs/'+state['id'])['data']
+          def read_diagnostics(token, run, stage_folder):
+              outcomes = []
+              store = run.get('defaultKeyValueStoreId')
+              targets = [('log.txt','/logs/'+run['id'],True,True)]
+              if store:
+                  targets += [(name+'.json', '/key-value-stores/'+store+'/records/'+key, False, required)
+                              for name,key,required in [('Input','INPUT',True),('summary','summary',True),('errors','errors',False),('OUTPUT-record','OUTPUT',False)]]
               else:
-                  # Saved before POST; never blindly resubmit an uncertain paid request.
-                  save(journal,{'stage':stage,'start_outcome':'pending','charge_cap_usd':0.10})
-                  run=api(token,'POST','/actors/'+ACTOR+'/runs',body,run_parameters(limit))['data']
-              def checkpoint(run):
-                  save(journal,{k:run[k] for k in ['id','status','defaultDatasetId','usageTotalUsd',
-                                                 'chargedEventCounts'] if k in run})
-              checkpoint(run)
-              deadline=time.monotonic()+240
+                  outcomes.append({'file':'Input.json','ok':False,'error':'defaultKeyValueStoreId absent'})
+              for name, path, is_text, required in targets:
+                  try:
+                      value = api(token, 'GET', path, text=is_text)
+                      (save_text if is_text else save)(stage_folder/name, value, token)
+                      outcomes.append({'file':name,'ok':True})
+                  except ApiError as error:
+                      absent_optional = not required and error.status == 404
+                      outcomes.append({'file':name,'ok':False,'optional_absent':absent_optional,'error':str(error)})
+              save(stage_folder/'diagnostic-status.json', outcomes, token)
+              return [x for x in outcomes if not x['ok'] and not x.get('optional_absent')]
+          
+          def run_actor(token, body, limit, stage, folder):
+              stage_folder = folder/stage
+              stage_folder.mkdir(exist_ok=False)
+              save(stage_folder/'requested-input.json', body, token)
+              save(stage_folder/'start-request.json', {'outcome':'pending','charge_cap_usd':0.10,'max_items':limit}, token)
+              # Exactly one POST per stage. Unknown outcomes are never retried.
+              run = api(token, 'POST', '/actors/'+ACTOR+'/runs', body, run_parameters(limit))['data']
+              index = 0
+              def checkpoint():
+                  nonlocal index
+                  save(stage_folder/f'metadata-{index:03d}.json', run, token)
+                  index += 1
+              checkpoint()
+              deadline = time.monotonic()+240
               while run['status'] in ('READY','RUNNING','TIMING-OUT','ABORTING'):
-                  if time.monotonic()>=deadline:
-                      raise RuntimeError('Actor not finished. Inspect saved run ID in Apify Console.')
+                  if time.monotonic() >= deadline:
+                      raise RuntimeError('Actor not finished. Inspect saved run ID; no retry was made.')
                   time.sleep(5)
-                  run=api(token,'GET','/actor-runs/'+run['id'])['data']
-                  checkpoint(run)
-              if run['status']!='SUCCEEDED':
-                  raise RuntimeError('Apify Actor ended with '+str(run['status']))
-              dataset=run.get('defaultDatasetId')
-              if not dataset:
-                  raise RuntimeError('Actor returned no dataset ID')
-              rows=api(token,'GET','/datasets/'+dataset+'/items',params={'clean':'true','format':'json','limit':limit})
-              if not isinstance(rows,list):
-                  raise RuntimeError('Unexpected dataset response')
+                  run = api(token, 'GET', '/actor-runs/'+run['id'])['data']
+                  checkpoint()
+              save(stage_folder/'metadata.json', run, token)
+              errors = read_diagnostics(token, run, stage_folder)
+              rows = None
+              if run.get('defaultDatasetId'):
+                  try:
+                      rows = api(token, 'GET', '/datasets/'+run['defaultDatasetId']+'/items',
+                                 params={'clean':'false','format':'json','limit':limit})
+                      if not isinstance(rows, list):
+                          raise ApiError('Dataset response is not an array')
+                      save(stage_folder/'Output.json', rows, token)
+                  except ApiError as error:
+                      errors.append({'file':'Output.json','error':str(error)})
+              else:
+                  errors.append({'file':'Output.json','error':'defaultDatasetId absent'})
+              if run['status'] != 'SUCCEEDED':
+                  errors.append({'error':'Actor terminal status '+str(run['status'])})
+              if errors:
+                  save(stage_folder/'read-errors.json', errors, token)
+                  # Caller records available counts before stopping on diagnostic failure.
               return rows
           
           def main():
-              token=os.environ.get('APIFY_TOKEN','').strip()
-              if not token:
-                  raise RuntimeError('Add APIFY_TOKEN in GitHub Actions secrets.')
-              query=os.environ.get('ASIC_QUERY','Antminer S19').strip()
-              location=os.environ.get('ASIC_LOCATION','all').strip()
-              if not 1<=len(query)<=100 or not re.fullmatch(r'[a-z_]{2,60}',location):
-                  raise RuntimeError('Invalid query/location; use an Avito city slug or all.')
-              run_id=os.environ['GITHUB_RUN_ID']
-              folder=ROOT/'runs'/run_id
-              folder.mkdir(parents=True,exist_ok=True)
-              search_rows=run_actor(token,{'query':query,'location':location,'maxItems':10,
-                                          'sort':'relevance'},10,'search',folder)
-              search=candidates(search_rows,10)
-              save(folder/'search.json',safe_rows(search,token))
-              selected=search[:3]
-              detailed=[]
-              if selected:
-                  detail_rows=run_actor(token,{'listingUrls':[x['url'] for x in selected],
-                                              'maxItems':3},3,'details',folder)
-                  by_id={x['ad_id']:x for x in candidates(detail_rows,3)}
-                  for item in selected:
-                      detail=by_id.get(item['ad_id'])
-                      if detail and detail.get('description_snippet'):
-                          detailed.append(merge_detail(item,detail))
-              save(ROOT/'pages'/(run_id+'.json'),{'query':query,'location':location,
-                                                'ads':safe_rows(detailed,token)})
-              message=(f'Тест Apify: {query}, регион {location}. Карточек: {len(search)}; '
-                       f'полных описаний: {len(detailed)}. Проверено не более 3 объявлений, '
-                       'это не полный проход списка. Не более двух запусков Actor с пределом $0.10 каждый.')
-              if not search:
-                  message+=' Пустой dataset сам по себе не доказывает отсутствие объявлений; проверьте журнал Actor.'
-              if search and not detailed:
-                  message+=' Полные описания не получены; количество устройств подтвердить нельзя.'
-              (ROOT/'README.md').write_text('# Тест Apify для ASIC\n\n'+message+
-                  '\n\n[Таблица подходящих](matches/README.md) · [Дополнительная проверка](review/README.md)'+
-                  '\n\nОригинальные результаты ReefAPI и их прогресс не изменяются.\n',encoding='utf-8')
-              with open(os.environ['GITHUB_STEP_SUMMARY'],'a',encoding='utf-8') as stream:
-                  stream.write('\n'+message+'\n')
-              print(message)
+              token = os.environ.get('APIFY_TOKEN','').strip()
+              folder = ROOT/'runs'/os.environ['GITHUB_RUN_ID']
+              counters = {'received':None,'model_pass':0,'details_requested':0,'blocked':0,'descriptions':0,'confirmed':0}
+              try:
+                  if not token:
+                      raise RuntimeError('APIFY_TOKEN is missing')
+                  query = os.environ.get('ASIC_QUERY','Antminer S19').strip()
+                  location = os.environ.get('ASIC_LOCATION','all').strip()
+                  if not 1 <= len(query) <= 100 or not re.fullmatch(r'[a-z_-]{2,60}',location):
+                      raise RuntimeError('Invalid query/location')
+                  scope = query_scope(query)
+                  save(folder/'request.json', {'query':query,'location':location,'model_scope':scope,'search_limit':10,'detail_limit':3,'max_total_charge_usd_per_actor':0.10}, token)
+                  search_rows = run_actor(token, {'query':query,'location':location,'maxItems':10,'sort':'relevance'},10,'search',folder)
+                  if search_rows is None:
+                      raise RuntimeError('Search Output unavailable; inspect search/read-errors.json; details not started.')
+                  counters['received'] = len(search_rows)
+                  counters['blocked'] = sum(bool(x.get('blocked')) for x in search_rows if isinstance(x,dict))
+                  selected, decisions = select_candidates(search_rows, query, 3)
+                  counters['model_pass'] = sum(x['decision']=='pass' for x in decisions)
+                  save(folder/'search-normalized.json', candidates(search_rows,10), token)
+                  save(folder/'model-decisions.json', decisions, token)
+                  save(folder/'selected.json', selected, token)
+                  if (folder/'search'/'read-errors.json').exists():
+                      raise RuntimeError('Search diagnostics incomplete; inspect search/read-errors.json; details not started.')
+                  detailed, detail_decisions = [], []
+                  if selected:
+                      counters['details_requested'] = len(selected)
+                      detail_rows = run_actor(token, {'listingUrls':[x['url'] for x in selected],'maxItems':3},3,'details',folder)
+                      if detail_rows is None:
+                          counters['blocked'] = None
+                          raise RuntimeError('Details Output unavailable; inspect details/read-errors.json.')
+                      by_id = {x['ad_id']:x for x in candidates(detail_rows,3)}
+                      counters['blocked'] += sum(bool(x.get('blocked')) for x in detail_rows if isinstance(x,dict))
+                      for item in selected:
+                          matches = [r for r in detail_rows if isinstance(r,dict) and str(r.get('listing_id') or r.get('id') or '')==item['ad_id']]
+                          detail = by_id.get(item['ad_id'])
+                          reason = 'missing_detail_record'
+                          decision = 'reject'
+                          if any(r.get('blocked') for r in matches): reason = 'upstream_blocked'
+                          elif any(r.get('found') is False for r in matches): reason = 'not_found'
+                          elif detail and not detail.get('description_snippet','').strip(): reason = 'description_missing'
+                          elif detail:
+                              verdict, why = title_decision(detail['title'] or item['title'], query)
+                              if verdict == 'pass':
+                                  detailed.append(merge_detail(item,detail)); reason = 'description_accepted'; decision = 'pass'
+                              else: reason = 'detail_title_'+why; decision = verdict
+                          elif matches: reason = 'invalid_identity_or_url'
+                          detail_decisions.append({'ad_id':item['ad_id'],'title':(detail or item)['title'],'city':(detail or item)['city'],'url':item['url'],'decision':decision,'reason':reason})
+                      counters['descriptions'] = len(detailed)
+                  save(folder/'detail-decisions.json', detail_decisions, token)
+                  save(folder/'page.json', {'query':query,'location':location,'ads':detailed}, token)
+                  if (folder/'details'/'read-errors.json').exists():
+                      raise RuntimeError('Details diagnostics incomplete; inspect details/read-errors.json. No retry was made.')
+              except Exception as error:
+                  # Never print unsanitized exception URLs, server bodies or credentials.
+                  message = str(error) if isinstance(error,(RuntimeError,FileExistsError)) else type(error).__name__
+                  save(folder/'collection-error.json', {'error':message,'no_automatic_retry':True}, token)
+                  raise RuntimeError(sanitize(message,token)) from None
+              finally:
+                  save(folder/'collection-counters.json', counters, token)
           
-          if __name__=='__main__':
+          if __name__ == '__main__':
               try:
                   main()
               except RuntimeError as error:
@@ -217,8 +548,8 @@ jobs:
                   sys.exit(1)
           PY
 
-      - name: Build table from verified detail responses
-        if: always() && steps.checkout.outcome == 'success'
+      - name: Build run-specific tables and diagnostic summary
+        if: always() && steps.prepare.outputs.created == 'true'
         shell: bash
         run: |
           python3 - <<'PY'
@@ -248,6 +579,7 @@ jobs:
           
           def normalize_models(text):
               """Normalize only brands/model-shaped tokens, preserving Russian sales text."""
+              text = re.sub(r'\b([sсtтmмlлdдaаeеbв])\s+(\d{1,4})', r'\1\2', str(text), flags=re.I)
               def word(match):
                   value = match.group().lower()
                   if value in BRAND_ALIASES:
@@ -271,6 +603,8 @@ jobs:
               text = re.sub(r'[a-zа-яё][a-zа-яё0-9+/-]*', word, str(text), flags=re.I)
               text = re.sub(r'\b(antminer|bitmain|whatsminer|microbt|innosilicon|avalon|canaan|bitfury|ebit)(?=[a-z]?\d)', r'\1 ', text, flags=re.I)
               text = re.sub(r'(?<=pro)\s+с\b', ' s', text, flags=re.I)
+              text = re.sub(r'\b(s19)\s+([кkиieеj])(?=\s|$)', lambda m:m[1]+m[2].translate(MODEL_LETTERS), text, flags=re.I)
+              text = re.sub(r'(?<![a-zа-я])[xх]\s*[pрп](?![a-zа-я])', 'xp', text, flags=re.I)
               return text
           
           TOKEN = re.compile(
@@ -492,91 +826,136 @@ jobs:
               value = html.escape(str(value), quote=False).replace('\n',' ').replace('\r',' ')
               return value.replace('\\','\\\\').replace('|','\\|').replace('[','\\[').replace(']','\\]').replace('*','\\*').replace('`','\\`').replace('_','\\_')
           
+          def model_key(token):
+              token = re.sub(r'\s+', '', token.casefold())
+              return 's19' if token.startswith('s19') else token
+          
+          def query_scope(query):
+              text = normalize_models(query)
+              tokens = list(TOKEN.finditer(text))
+              found = identify(text)
+              if len(tokens) != 1 or len(found) != 1 or not found[0]['valid']:
+                  raise RuntimeError('Query must identify one supported model; ambiguous/unsupported query was not sent.')
+              return model_key(tokens[0].group())
+          
+          def title_decision(title, query):
+              scope = query_scope(query)
+              text = normalize_models(title)
+              goods = re.sub(r'на\s+запчасти', '', text, flags=re.I)
+              parts_title = re.sub(r'\(\s*\d+\s+чип(?:а|ов)?\s*\)', '', text, flags=re.I)
+              if BUYER.search(text) or PARTS.search(parts_title) or ACCESSORY.search(goods):
+                  return 'reject', 'accessory_or_service'
+              if re.search(r'\bxp\b|\bhyd(?:ro)?\b|гидро|s19\w*(?:xp|hydro)', text, re.I):
+                  return 'reject', 'excluded_xp_or_hydro'
+              known = {model_key(m.group()) for m in TOKEN.finditer(text)}
+              shaped = {model_key(m.group()) for m in re.finditer(r'\b[a-z]{1,4}\d{1,5}[a-z0-9+]*\b', text, re.I)}
+              keys = known | shaped
+              if scope in keys and keys != {scope}:
+                  return 'review', 'mixed_models_in_title'
+              if scope not in keys:
+                  return ('reject','different_model') if keys else ('review','model_not_clear_in_title')
+              if not any(item['valid'] for item in identify(text)):
+                  return 'review', 'variant_not_clear_in_title'
+              return 'pass', 'model_matches_query'
+          
           def main():
-              root = Path('results/apify-test')
-              files = sorted((root/'pages').glob('*.json'))
-              reports = [json.loads(p.read_text(encoding='utf-8')) for p in files]
-              rows, pending = collect(reports)
-              folder = root/'matches'
-              folder.mkdir(parents=True, exist_ok=True)
-              now = datetime.now(timezone(timedelta(hours=5))).strftime('%d.%m.%Y %H:%M')
-              text = ['# Тест Apify: подходящие объявления ASIC', '', f'Обновлено: {now} (Екатеринбург).', '',
-                      'Whatsminer M50: от 10. Antminer T21: от 20. Innosilicon A10 / A10 Pro / A11 / A11 Pro: от 1 целого устройства. Antminer S19 всех модификаций, кроме XP и Hydro: от 15. Bitfury B8 / BT200: от 5. Остальные модели из списка: от 20 у одного продавца.', '',
-                      'Это автоматический отбор по сохранённым фрагментам описаний. Наличие, состояние и цена заявлены продавцами; подтверждения контактом нет. '
-                      'Для A10/A11 без количества указано «от 1; остаток не указан», а не подтверждённый остаток. '
-                      'Неоднозначные объявления находятся в [отдельной таблице проверки](../review/README.md).', '',
-                      f'Сохранённых страниц: {len(files)}. Подходящих позиций: {len(rows)}.', '',
-                      '| Количество | Город | Модель | Цена | Состояние | Подтверждение | Ссылка |',
+              run_id = os.environ['GITHUB_RUN_ID']
+              if not re.fullmatch(r'[0-9]+',run_id):
+                  raise SystemExit('Invalid run ID')
+              root = Path('results/apify-test/runs')/run_id
+              if not (root/'created.json').is_file():
+                  raise SystemExit('New-run marker missing; existing reports are not modified')
+              def load(name, fallback):
+                  path = root/name
+                  return json.loads(path.read_text(encoding='utf-8')) if path.exists() else fallback
+              def write(name, value):
+                  path = root/name
+                  path.parent.mkdir(parents=True,exist_ok=True)
+                  with path.open('x',encoding='utf-8') as stream:
+                      stream.write(value)
+              request = load('request.json', {})
+              query = request.get('query','')
+              page = load('page.json', {'ads':[]})
+              rows, pending = collect([page])
+              if query:
+                  rows = [row for row in rows if title_decision(row['model'],query)[0]=='pass']
+              else:
+                  rows = []
+              model_decisions = load('model-decisions.json', [])
+              for row in model_decisions:
+                  if row['decision']=='review':
+                      pending.append({k:row.get(k,'') for k in ('ad_id','title','city','url')} | {'reason':'Модель в заголовке неоднозначна; ' + row['reason']})
+              for row in load('detail-decisions.json', []):
+                  if row.get('decision')=='review':
+                      pending.append({k:row.get(k,'') for k in ('ad_id','title','city','url')} | {'reason':'Модель подробной карточки неоднозначна; ' + row['reason']})
+              counters = load('collection-counters.json', {'received':None,'model_pass':0,'details_requested':0,'blocked':None,'descriptions':0})
+              counters['confirmed'] = len(rows)
+              write('counters.json', json.dumps(counters,ensure_ascii=False,indent=2)+'\n')
+              error = load('collection-error.json', None)
+              message = (f"Тест: {query or 'не выполнен'}, регион {request.get('location','не указан')}. "
+                         f"Получено карточек: {counters['received'] if counters['received'] is not None else 'неизвестно'}; прошло модельный фильтр: {counters['model_pass']}; "
+                         f"запрошено подробностей: {counters['details_requested']}; заблокировано: {counters['blocked']}; "
+                         f"полных описаний: {counters['descriptions']}; подтверждено по описаниям: {counters['confirmed']}.")
+              warning = ('Блокировка или отсутствие описаний не означает отсутствия подходящих партий. '
+                         'Проверены максимум 3 объявления; это не полный поиск. Фактический остаток у продавца не проверялся.')
+              if error:
+                  warning += ' Сбор/диагностика завершились с ошибкой: см. collection-error.json и read-errors.json в каталоге соответствующего этапа.'
+              text = ['# Подходящие объявления этого запуска','',message,'',warning,'',
+                      'Пороги количества сохранены: S19 (кроме XP/Hydro) от 15, M50 от 10, T21 от 20, A10/A11 от 1, B8/BT200 от 5; остальные ранее поддерживаемые модели от 20.',
+                      '', '| Количество | Город | Модель | Цена | Состояние | Подтверждение | Ссылка |',
                       '|---|---|---|---|---|---|---|']
               for row in rows:
-                  text.append('| ' + ' | '.join(cell(row[k]) for k in ['quantity','city','model','price','condition','evidence']) + f" | [Авито]({row['url']}) |")
-              if not rows:
-                  text += ['', 'Пока нет однозначно подходящих объявлений. Это не означает, что поиск закончен.']
-              state_path = root/'asic-progress.json'
-              if state_path.exists():
-                  state = json.loads(state_path.read_text(encoding='utf-8'))
-                  entries = state.get('pages', [])
-                  active = [x for x in entries if not x.get('disabled')]
-                  finished = sum(bool(x.get('done')) for x in active)
-                  caps = sum(bool(x.get('api_limit_reached')) for x in active)
-                  text += ['', f'Завершены активные запросы: {finished}/{len(active)}. Отключены: {len(entries)-len(active)}. Достигли предела 30 страниц: {caps}.']
-                  blocked = [(i,x) for i,x in enumerate(entries) if x.get('blocked') and not x.get('disabled')]
-                  if blocked:
-                      text += ['', '**Запросы с ошибкой: отложены, не считаются завершёнными. Остальные продолжаются.**', '',
-                               '| Запрос | Страница | Ошибка |', '|---|---|---|']
-                      for index, entry in blocked:
-                          error = entry['blocked']
-                          text.append('| ' + ' | '.join(cell(v) for v in [
-                              state['queries'][index],error['page'],
-                              str(error['code'])+': '+str(error.get('message',''))]) + ' |')
-                  if state.get('search_mode') == 'personal_api_key':
-                      reserved = state.get('api_budget_reserved', 0)
-                      succeeded = state.get('api_successful_requests', 0)
-                      text += ['', f'Личный API-ключ: успешных запросов {succeeded}. Консервативный резерв расхода: {reserved}/900 кредитов. '
-                               'Это счётчик workflow, не фактический баланс ReefAPI; ошибки тоже резервируются.']
-                  if state.get('last_error'):
-                      text += ['', 'Последняя ошибка поиска: ' + cell(json.dumps(state['last_error'], ensure_ascii=False))]
-                  if state.get('paused'):
-                      text += ['', '**Поиск приостановлен из-за ошибки; требуется проверка журнала.**']
-              (folder/'README.md').write_text('\n'.join(text)+'\n', encoding='utf-8')
-              (folder/'ads.json').write_text(json.dumps(rows, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
-              with (folder/'ads.csv').open('w', encoding='utf-8-sig', newline='') as stream:
-                  fields = ['quantity','city','model','price','condition','evidence','url','ad_id']
-                  writer = csv.writer(stream)
-                  writer.writerow(fields)
+                  text.append('| '+' | '.join(cell(row[k]) for k in ['quantity','city','model','price','condition','evidence'])+f" | [Авито]({row['url']}) |")
+              write('matches/README.md','\n'.join(text)+'\n')
+              write('matches/ads.json',json.dumps(rows,ensure_ascii=False,indent=2)+'\n')
+              with (root/'matches/ads.csv').open('x',encoding='utf-8-sig',newline='') as stream:
+                  fields=['quantity','city','model','price','condition','evidence','url','ad_id']
+                  writer=csv.writer(stream); writer.writerow(fields)
                   for row in rows:
-                      values = [str(row[k]) for k in fields]
+                      values=[str(row[k]) for k in fields]
                       writer.writerow(["'"+v if v.startswith(('=','+','-','@')) else v for v in values])
-              review = root/'review'
-              review.mkdir(parents=True, exist_ok=True)
-              review_text = ['# Объявления на дополнительную проверку', '', 'Эти объявления НЕ признаны подходящими. Сверьте полное описание и наличие с продавцом.', '',
-                             '| Город | Объявление | Причина | Ссылка |', '|---|---|---|---|']
+              review=['# Нужна ручная проверка','', 'Эти объявления не признаны подходящими.','',
+                      '| Город | Объявление | Причина | Ссылка |','|---|---|---|---|']
               for row in pending:
-                  review_text.append('| ' + ' | '.join(cell(row[k]) for k in ['city','title','reason']) + f" | [Авито]({row['url']}) |")
-              (review/'README.md').write_text('\n'.join(review_text)+'\n', encoding='utf-8')
-              summary = os.environ.get('GITHUB_STEP_SUMMARY')
-              if summary:
-                  repo = os.environ['GITHUB_REPOSITORY']
-                  with open(summary, 'a', encoding='utf-8') as stream:
-                      stream.write(f'\n## Подходящие объявления\n\nНайдено позиций: {len(rows)}. '
-                                   f'[Открыть таблицу](https://github.com/{repo}/tree/main/results/apify-test/matches)\n\n')
-                      stream.write('\n'.join(text[text.index('| Количество | Город | Модель | Цена | Состояние | Подтверждение | Ссылка |'):])+'\n')
-              print(f'Report: {len(rows)} matching model positions; {len(pending)} need review.')
+                  review.append('| '+' | '.join(cell(row[k]) for k in ['city','title','reason'])+f" | [Авито]({row['url']}) |")
+              write('review/README.md','\n'.join(review)+'\n')
+              write('review/ads.json',json.dumps(pending,ensure_ascii=False,indent=2)+'\n')
+              summary=['# Apify: один ограниченный тест','',message,'',warning,'',
+                       '[Подходящие](matches/README.md) · [Неоднозначные](review/README.md)','',
+                       'Диагностика: request.json; search/ и details/ содержат Input/Output, metadata, summary, errors, log и статусы чтения. '
+                       'requested-input.json — отправленное тело запроса, Input.json — сохранённый Input сервиса; Output.json — dataset без фильтрации строк. '
+                       'Отсутствующий диагностический файл отмечается в diagnostic-status.json/read-errors.json, а не подменяется пустым результатом.','',
+                       'Причины решений: model-decisions.json и detail-decisions.json. Счётчики: counters.json. '
+                       'Не больше двух Actor-запусков с пределом $0.10 каждый; лимиты не означают нулевой расход. '
+                       'Секреты, заголовки авторизации, параметры и фрагменты URL скрываются перед сохранением. Старые результаты и прогресс не изменяются.']
+              write('README.md','\n'.join(summary)+'\n')
+              step_summary=os.environ.get('GITHUB_STEP_SUMMARY')
+              if step_summary:
+                  repo=os.environ['GITHUB_REPOSITORY']
+                  with open(step_summary,'a',encoding='utf-8') as stream:
+                      stream.write('\n'+message+'\n\n'+warning+'\n\n')
+                      stream.write(f'[Результаты этого запуска](https://github.com/{repo}/tree/main/results/apify-test/runs/{run_id})\n')
+              print(message)
           
           if __name__ == '__main__':
               main()
           PY
 
-      - name: Save separate Apify results
-        if: always() && steps.checkout.outcome == 'success'
+      - name: Save only this new Apify run directory
+        if: always() && steps.prepare.outputs.created == 'true'
         shell: bash
         run: |
-          if [ -d results/apify-test ]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add results/apify-test/
-            if ! git diff --cached --quiet; then
-              git commit -m "Save small Apify ASIC test"
-              git push origin HEAD:main
-            fi
+          set -euo pipefail
+          [[ "$GITHUB_RUN_ID" =~ ^[0-9]+$ ]] || exit 1
+          run_dir="results/apify-test/runs/$GITHUB_RUN_ID"
+          test -f "$run_dir/created.json"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- "$run_dir/"
+          while IFS= read -r changed; do
+            [[ "$changed" == "$run_dir/"* ]] || { echo "Refusing unrelated staged changes"; exit 1; }
+          done < <(git diff --cached --name-only)
+          if ! git diff --cached --quiet; then
+            git commit -m "Save bounded Apify test diagnostics for run $GITHUB_RUN_ID"
+            git push origin HEAD:main
           fi
