@@ -139,6 +139,11 @@ jobs:
           RATE = re.compile(r'(\d+(?:[.,]\d+)?)(?:\s*[/–-]\s*(\d+(?:[.,]\d+)?))?\s*(?:th|t[hx]?|тх|т|gh|g|г)(?:\b|/)', re.I)
           PRICE = re.compile(r'(\d[\d\s.,]*\s*(?:₽|руб\.?|р\.))\s*(?:/\s*(?:шт\.?|комплект)|за\s+(?:1\s*)?(?:шт\w*|комплект))', re.I)
           
+          def title_has_parts(title):
+              # A parenthetical chip specification is not a separate parts lot or stock count.
+              cleaned = re.sub(r'\(\s*\d+\s+чип(?:а|ов)?\s*\)', '', title, flags=re.I)
+              return bool(PARTS.search(cleaned) or re.search(r'\bплат(?:а|ы|у|е|ой|ами|ах)?\b', cleaned, re.I))
+          
           def identify(line):
               line = normalize_models(line)
               matches = list(TOKEN.finditer(line))
@@ -370,8 +375,7 @@ jobs:
               scope = query_scope(query)
               text = normalize_models(title)
               goods = re.sub(r'на\s+запчасти', '', text, flags=re.I)
-              parts_title = re.sub(r'\(\s*\d+\s+чип(?:а|ов)?\s*\)', '', text, flags=re.I)
-              if BUYER.search(text) or PARTS.search(parts_title) or ACCESSORY.search(goods):
+              if BUYER.search(text) or title_has_parts(text) or ACCESSORY.search(goods):
                   return 'reject', 'accessory_or_service'
               if re.search(r'\bxp\b|\bhyd(?:ro)?\b|гидро|s19\w*(?:xp|hydro)', text, re.I):
                   return 'reject', 'excluded_xp_or_hydro'
@@ -624,6 +628,11 @@ jobs:
           RATE = re.compile(r'(\d+(?:[.,]\d+)?)(?:\s*[/–-]\s*(\d+(?:[.,]\d+)?))?\s*(?:th|t[hx]?|тх|т|gh|g|г)(?:\b|/)', re.I)
           PRICE = re.compile(r'(\d[\d\s.,]*\s*(?:₽|руб\.?|р\.))\s*(?:/\s*(?:шт\.?|комплект)|за\s+(?:1\s*)?(?:шт\w*|комплект))', re.I)
           
+          def title_has_parts(title):
+              # A parenthetical chip specification is not a separate parts lot or stock count.
+              cleaned = re.sub(r'\(\s*\d+\s+чип(?:а|ов)?\s*\)', '', title, flags=re.I)
+              return bool(PARTS.search(cleaned) or re.search(r'\bплат(?:а|ы|у|е|ой|ами|ах)?\b', cleaned, re.I))
+          
           def identify(line):
               line = normalize_models(line)
               matches = list(TOKEN.finditer(line))
@@ -702,7 +711,7 @@ jobs:
               if not url or any('/'+category+'/' in url for category in [
                       'doma_dachi_kottedzhi','kvartiry','zemelnye_uchastki','garazhi_i_mashinomesta']):
                   return [], []
-              if BUYER.search(title) or PARTS.search(title) or ACCESSORY.search(title_goods) or re.search(r'фл[ая]нц',title,re.I):
+              if BUYER.search(title) or title_has_parts(title) or ACCESSORY.search(title_goods) or re.search(r'фл[ая]нц',title,re.I):
                   return [], []
               if re.search(r'выкупаем|выкуплю|скупаем|куплю|утилизац|принимаем ваши', desc, re.I):
                   return [], []
@@ -842,8 +851,7 @@ jobs:
               scope = query_scope(query)
               text = normalize_models(title)
               goods = re.sub(r'на\s+запчасти', '', text, flags=re.I)
-              parts_title = re.sub(r'\(\s*\d+\s+чип(?:а|ов)?\s*\)', '', text, flags=re.I)
-              if BUYER.search(text) or PARTS.search(parts_title) or ACCESSORY.search(goods):
+              if BUYER.search(text) or title_has_parts(text) or ACCESSORY.search(goods):
                   return 'reject', 'accessory_or_service'
               if re.search(r'\bxp\b|\bhyd(?:ro)?\b|гидро|s19\w*(?:xp|hydro)', text, re.I):
                   return 'reject', 'excluded_xp_or_hydro'
