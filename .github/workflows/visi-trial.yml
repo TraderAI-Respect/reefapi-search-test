@@ -1,0 +1,35 @@
+name: VISI free trial - Innosilicon A10 Pro and A11 Pro
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: asic-full-scan
+  cancel-in-progress: false
+
+jobs:
+  search:
+    if: github.run_attempt == 1 && github.run_number == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Run all offline safety tests
+        run: python3 -m unittest discover -s tests -v
+      - name: Run the bounded free VISI trial
+        env:
+          VISI_API_KEY: ${{ secrets.VISI_API_KEY }}
+        run: python3 scripts/visi_trial.py
+      - name: Preserve partial results and request accounting
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visi-trial-${{ github.run_id }}
+          path: visi-trial-results/
+          if-no-files-found: warn
+          retention-days: 30
