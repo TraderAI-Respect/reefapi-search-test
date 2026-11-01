@@ -490,9 +490,13 @@ jobs:
               r'a?921|a?920h?|841|a?851|a?852|e10|e9(?:\s*miner\+)?|'
               r'b8|bt200|h7\s*pro|a1|f1)(?![a-z0-9+])', re.I)
           BRANDED = re.compile(r'\b(?:antminer|whatsminer|microbt|innosilicon|avalon|canaan|ebit|bitfury|hummer|aiden|aladdin|cheetah)\b', re.I)
-          PARTS = re.compile(r'х[еэ]ш.?плат|контрольн|контроллер|конвертер|переходник|эмулятор|\bкпу\b|\bбп\b|блок[аи]?\s+питани|корпус|вентил|кулер|шлейф|кабел|коса|чип|водоблок|жидкост|ванна|стойк|стеллаж|трафарет|тестер|контейнер|фланец|термопаст|разъ[её]м|коннектор|планка|шумбокс', re.I)
-          BUYER = re.compile(r'выкуп|скупк|куплю|покупаем|выкупаем|при[её]м|утилизац|ремонт|хостинг|размещен|настройка|прошивка', re.I)
+          # Negative intents from the user's 2026-11-01 examples: no brands, models or cities.
+          # These filter saved results locally; search queries and paid API calls are unchanged.
+          PARTS = re.compile(r'х[еэ]ш.?плат|контрольн|контроллер|конвертер|переходник|удлинител|эмулятор|\bкпу\b|\bбп\b|блок(?:и|а|ов|ом|ами)?\s+питани|корпус|вентил|кулер|шлейф|кабел|коса|чип|водоблок|жидкост|охладител|электронн\w*\s+компонент|ванна|стойк|стеллаж|трафарет|тестер|контейнер|фланец|термопаст|разъ[её]м|коннектор|планка|шумбокс', re.I)
+          BUYER = re.compile(r'выкуп|скупк|куплю|покупаем|выкупаем|при[её]м|утилизац|обучени|ремонт|майнинг[\s-]*отел|хостинг|размещен|настройка|прошивка', re.I)
           ACCESSORY = re.compile(r'фильтр|filter|памят|memory|микросхем|комплектующ|запчаст|аксессуар|accessor|пылезащит|воздуховод|шумоглуш|ddr|eeprom|nand', re.I)
+          REPAIR_CONTEXT = re.compile(r'\b(?:под|на|после|требует|требуют|без|нуждается\s+в|нуждаются\s+в)\s+ремонт\w*', re.I)
+          BUNDLE_CONTEXT = re.compile(r'\b(?:в\s+комплекте\s+с|вместе\s+с|с|со)\s+(?:блок(?:и|а|ов|ом|ами)?\s+питания|бп|кабел(?:ем|ь|ями)\s+питания)\b', re.I)
           UNITS = r'(?:шт(?:ук(?:и|а)?)?\.?|устройств\w*|аппарат\w*|асик\w*|майнер\w*|комплект\w*)'
           QTY = re.compile(r'(?<![\d.,])(?P<lo>\d{1,5})(?:\s*[–—-]\s*(?P<hi>\d{1,5}))?\s*' + UNITS, re.I)
           RATE = re.compile(r'(\d+(?:[.,]\d+)?)(?:\s*[/–-]\s*(\d+(?:[.,]\d+)?))?\s*(?:th|t[hx]?|тх|т|gh|g|г)(?:\b|/)', re.I)
@@ -564,15 +568,49 @@ jobs:
                   return part._replace(query='', fragment='').geturl()
               return None
           
+          def whole_device_context(title):
+              """Conservative exception: only a model, sale/device words and stock/rate remain."""
+              text = normalize_models(title)
+              if not any(model['valid'] for model in identify(text)):
+                  return False
+              text = TOKEN.sub('', text)
+              text = BRANDED.sub('', text)
+              text = RATE.sub('', text)
+              text = re.sub(r'\b(?:продам|продаю|продажа|партия|асики?|майнеры?|asic|miner|неисправн\w*|нерабочи\w*|рабочи\w*|новы[йе]|б/у|бу|шт|штук[аи]?)\b', '', text, flags=re.I)
+              return not re.sub(r'[\s\d.,+–—()/:-]+', '', text)
+
+          def negative_title_reason(title, desc=''):
+              """Brand-independent intent filtering, with whole-miner context preserved."""
+              filtered = str(title)
+              whole_model = any(model['valid'] for model in identify(title))
+              ambiguous_case = bool(whole_model and re.search(r'\bкорпус\b', title, re.I)
+                  and re.search(r'включ[её]н\s+в\s+розетку', desc, re.I))
+              # A model mention alone is compatibility, not evidence of selling a whole miner.
+              # Admit repair/bundle qualifiers only if the remaining title is an inventory title.
+              candidate = BUNDLE_CONTEXT.sub('', REPAIR_CONTEXT.sub('', filtered))
+              if whole_device_context(candidate):
+                  filtered = candidate
+              if ambiguous_case:
+                  filtered = re.sub(r'\bкорпус\b', '', filtered, flags=re.I)
+              goods = re.sub(r'на\s+запчасти', '', filtered, flags=re.I)
+              if BUYER.search(filtered):
+                  return 'buyback_or_service'
+              if PARTS.search(filtered) or ACCESSORY.search(goods):
+                  return 'separate_accessory'
+              # Omitted from the user's negative examples; never count as a complete ASIC.
+              return 'ambiguous_case' if ambiguous_case else None
+          
           def classify(ad):
               title, desc = str(ad.get('title') or ''), str(ad.get('description_snippet') or '')
               url = listing_url(ad)
-              # Whole faulty miners sold "на запчасти" are allowed, accessory lots are not.
-              title_goods = re.sub(r'на\s+запчасти', '', title, flags=re.I)
-              if not url or BUYER.search(title) or PARTS.search(title) or ACCESSORY.search(title_goods):
+              negative_reason = negative_title_reason(title, desc)
+              if not url or negative_reason in ('buyback_or_service', 'separate_accessory'):
                   return [], []
               if re.search(r'выкупаем|выкуплю|скупаем|куплю|утилизац|принимаем ваши', desc, re.I):
                   return [], []
+              if negative_reason == 'ambiguous_case':
+                  return [], [{'ad_id':str(ad['ad_id']), 'title':title, 'city':str(ad.get('city') or ''),
+                               'url':url, 'reason':'В заголовке указан корпус; комплектность целого ASIC не подтверждена'}]
               title = normalize_models(title)
               normalized_desc = normalize_models(desc)
               title_models = identify(title)
@@ -619,6 +657,10 @@ jobs:
                       continue
                   quantity = None
                   for line in segment.splitlines():
+                      bundle = BUNDLE_CONTEXT.search(line)
+                      if bundle:
+                          # Only the pre-bundle stock belongs to miners; never count spare PSUs.
+                          line = line[:bundle.start()]
                       accessory = ACCESSORY.search(re.sub(r'на\s+запчасти', '           ', line, flags=re.I))
                       if accessory:
                           prefix = line[:accessory.start()]
@@ -970,3 +1012,4 @@ jobs:
           if __name__ == '__main__':
               main()
           PY
+

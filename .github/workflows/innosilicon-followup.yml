@@ -1,0 +1,35 @@
+name: Innosilicon remainder-only follow-up - original 8-credit budget
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: asic-full-scan
+  cancel-in-progress: false
+
+jobs:
+  search:
+    if: github.run_attempt == 1 && github.run_number == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Run all offline safety and shared-filter tests
+        run: python3 -m unittest discover -s tests -v
+      - name: Check free balance and search only when both first pages fit
+        env:
+          REEF_API_KEY: ${{ secrets.REEF_API_KEY }}
+        run: python3 scripts/innosilicon_followup.py
+      - name: Preserve results and error accounting
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: innosilicon-followup-${{ github.run_id }}
+          path: innosilicon-followup-results/
+          if-no-files-found: warn
+          retention-days: 30
