@@ -1,0 +1,83 @@
+name: VISI free base scan - 44 first pages and up to 3 details
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: asic-full-scan
+  cancel-in-progress: false
+
+jobs:
+  search:
+    if: github.run_attempt == 1 && github.run_number == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Run all offline safety tests
+        run: python3 -m unittest discover -s tests -v
+      - name: Run approved bounded base scan
+        env:
+          VISI_API_KEY: ${{ secrets.VISI_API_KEY }}
+        run: python3 scripts/visi_base_scan.py
+      - name: Visible results part 1
+        if: always()
+        shell: bash
+        run: |
+          file="visi-base-results/${{ github.run_id }}/summary-01.md"
+          if [ -f "$file" ]; then cat "$file" >> "$GITHUB_STEP_SUMMARY"; fi
+      - name: Visible results part 2
+        if: always()
+        shell: bash
+        run: |
+          file="visi-base-results/${{ github.run_id }}/summary-02.md"
+          if [ -f "$file" ]; then cat "$file" >> "$GITHUB_STEP_SUMMARY"; fi
+      - name: Visible results part 3
+        if: always()
+        shell: bash
+        run: |
+          file="visi-base-results/${{ github.run_id }}/summary-03.md"
+          if [ -f "$file" ]; then cat "$file" >> "$GITHUB_STEP_SUMMARY"; fi
+      - name: Visible results part 4
+        if: always()
+        shell: bash
+        run: |
+          file="visi-base-results/${{ github.run_id }}/summary-04.md"
+          if [ -f "$file" ]; then cat "$file" >> "$GITHUB_STEP_SUMMARY"; fi
+      - name: Visible results part 5
+        if: always()
+        shell: bash
+        run: |
+          file="visi-base-results/${{ github.run_id }}/summary-05.md"
+          if [ -f "$file" ]; then cat "$file" >> "$GITHUB_STEP_SUMMARY"; fi
+      - name: Visible results part 6
+        if: always()
+        shell: bash
+        run: |
+          file="visi-base-results/${{ github.run_id }}/summary-06.md"
+          if [ -f "$file" ]; then cat "$file" >> "$GITHUB_STEP_SUMMARY"; fi
+      - name: Visible results part 7
+        if: always()
+        shell: bash
+        run: |
+          file="visi-base-results/${{ github.run_id }}/summary-07.md"
+          if [ -f "$file" ]; then cat "$file" >> "$GITHUB_STEP_SUMMARY"; fi
+      - name: Visible results part 8
+        if: always()
+        shell: bash
+        run: |
+          file="visi-base-results/${{ github.run_id }}/summary-08.md"
+          if [ -f "$file" ]; then cat "$file" >> "$GITHUB_STEP_SUMMARY"; fi
+      - name: Preserve checkpoint, full visible list and safe response audits
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visi-base-${{ github.run_id }}
+          path: visi-base-results/
+          if-no-files-found: warn
+          retention-days: 30
