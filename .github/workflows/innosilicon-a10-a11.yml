@@ -1,0 +1,35 @@
+name: Innosilicon A10 Pro and A11 Pro - max 8 credits
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: asic-full-scan
+  cancel-in-progress: false
+
+jobs:
+  search:
+    if: github.run_attempt == 1 && github.run_number == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Run offline safety tests
+        run: python3 -m unittest discover -s tests -p 'test_innosilicon_search.py' -v
+      - name: Search only two Innosilicon Pro models
+        env:
+          REEF_API_KEY: ${{ secrets.REEF_API_KEY }}
+        run: python3 scripts/innosilicon_search.py
+      - name: Preserve results even after a stopped request
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: innosilicon-${{ github.run_id }}
+          path: innosilicon-results/
+          if-no-files-found: warn
+          retention-days: 30
