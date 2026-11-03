@@ -1,0 +1,43 @@
+name: VISI API - Mac mini M1-M5
+
+on:
+  workflow_dispatch:
+    inputs:
+      api_plan_confirmed:
+        description: 'Active VISI API plan confirmed (not Start); authorize up to 5 API calls'
+        type: boolean
+        required: true
+        default: false
+
+permissions:
+  contents: read
+
+# Share the existing parser lane; do not consume the same VISI quota concurrently.
+concurrency:
+  group: asic-full-scan
+  cancel-in-progress: false
+
+jobs:
+  search:
+    if: github.run_attempt == 1 && inputs.api_plan_confirmed
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Run offline regression and safety tests
+        run: python3 -m unittest discover -s tests -v
+      - name: Search five fixed first pages
+        env:
+          VISI_API_KEY: ${{ secrets.VISI_API_KEY }}
+          VISI_API_PLAN_CONFIRMED: ${{ inputs.api_plan_confirmed }}
+        run: python3 scripts/visi_mac_mini.py
+      - name: Preserve separate Mac mini report and checkpoint
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visi-mac-mini-${{ github.run_id }}
+          path: visi-mac-mini-results/
+          if-no-files-found: warn
+          retention-days: 30
